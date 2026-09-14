@@ -1,0 +1,189 @@
+-- ====================================================================================================================================================================================
+-- Author										Ticket							Description
+-- Jennifer Larios      					Downtime Overhaul			UPDATE IN BATCHES + PROGRESS/ETA 
+
+-- ====================================================================================================================================================================================
+CREATE   PROCEDURE [dbo].[Usp_Inactivate_OldDwntmRecords]
+    @upd_batch        int = 100000
+  
+
+WITH EXECUTE AS OWNER
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    DECLARE @now           datetime2(0) = SYSUTCDATETIME();             
+   
+    DECLARE @t_start       datetime2(7) = SYSDATETIME();
+    DECLARE @t_loop        datetime2(7);
+    DECLARE @aff           int;
+    DECLARE @done_rows     bigint = 0;
+    DECLARE @total_target  bigint;
+
+-- 1) Total target to update
+
+ SELECT @total_target =COUNT_BIG(*)
+ FROM dbo.FDC_VISIT_METRIC vm
+ WHERE vm.status = 1
+   AND EXISTS (
+      SELECT 1
+      FROM dbo.FDC_METRIC m
+      WHERE m.METRIC_UID = vm.METRIC_UID
+        AND m.METRIC_CODE IN ('MTR052','MTR085','MTR051')
+  );
+
+  
+IF ISNULL(@total_target, 0) = 0
+BEGIN
+  SELECT 0 AS total_target, 0 AS already_done, 'Nothing to update' AS note;
+  GOTO DO_UPDATE;-- skip straight to SECOND UPDATE step
+END
+
+SELECT @total_target AS total_rows_to_update;
+
+-- 2) Update loop
+WHILE (1 = 1)
+BEGIN
+    SET @t_loop = SYSDATETIME();
+        BEGIN TRY
+            BEGIN TRAN;
+
+    ;WITH cte AS (
+        SELECT TOP (@upd_batch)
+               vm.VISIT_METRIC_UID,
+               vm.VISIT_METRIC_DATE
+        FROM dbo.FDC_VISIT_METRIC vm 
+        WHERE vm.status = 1
+	       AND EXISTS (
+              SELECT 1
+              FROM dbo.FDC_METRIC m
+              WHERE m.METRIC_UID = vm.METRIC_UID
+                AND m.METRIC_CODE IN ('MTR052','MTR085','MTR051')
+          )
+        ORDER BY vm.VISIT_METRIC_UID, vm.VISIT_METRIC_DATE   -- clustered key order
+    )
+    UPDATE vm
+       SET vm.status      = 0,
+           vm.LAST_UPDATE = @now,
+           vm.dtstatus    = -3
+    FROM dbo.FDC_VISIT_METRIC vm
+    JOIN cte
+      ON  cte.VISIT_METRIC_UID  = vm.VISIT_METRIC_UID
+      AND cte.VISIT_METRIC_DATE = vm.VISIT_METRIC_DATE
+    OPTION (RECOMPILE);
+
+    SET @aff = @@ROWCOUNT;
+            COMMIT;
+        END TRY
+        BEGIN CATCH
+            IF XACT_STATE() <> 0 ROLLBACK;
+            THROW;
+        END CATCH;
+
+    SET @done_rows += @aff;
+
+	       SELECT
+          SYSDATETIME() AS now_local,
+          @aff          AS rows_updated_in_batch,
+          @done_rows    AS rows_done_total,
+          @total_target AS rows_total_target,
+          CAST(100.0 * @done_rows / NULLIF(@total_target,0) AS decimal(6,2)) AS pct_complete,
+          DATEDIFF(SECOND, @t_loop, SYSDATETIME()) AS seconds_last_batch,
+          DATEDIFF(SECOND, @t_start, SYSDATETIME()) AS seconds_elapsed_total;
+
+        IF (@aff < @upd_batch) BREAK;
+    END
+	    
+
+
+SELECT
+    'UPDATE_FIN' AS status,
+    @done_rows   AS rows_done_total,
+    @total_target AS rows_total_target,
+    CAST(100.0 * @done_rows / @total_target AS DECIMAL(6,2)) AS pct_complete,
+    CAST(DATEDIFF(SECOND, @t_start, SYSDATETIME()) AS INT)    AS seconds_total_elapsed;
+
+	-- 1.1) Total target to update when VM.status=0 and dtstatus<>-3
+DO_UPDATE:
+SELECT @total_target =COUNT_BIG(*)
+FROM dbo.FDC_VISIT_METRIC vm
+WHERE vm.status = 0 and dtstatus!=-3
+   AND EXISTS (
+      SELECT 1
+      FROM dbo.FDC_METRIC m
+      WHERE m.METRIC_UID = vm.METRIC_UID
+        AND m.METRIC_CODE IN ('MTR052','MTR085','MTR051')
+  );
+
+
+
+
+SELECT @total_target AS total_rows_to_update;
+IF ISNULL(@total_target, 0) > 0
+ BEGIN
+-- 2.1) Update loop
+	WHILE (1 = 1)
+	BEGIN
+		SET @t_loop = SYSDATETIME();
+		 BEGIN TRY
+			    BEGIN TRAN;
+
+		;WITH cte AS (
+		    SELECT TOP (@upd_batch)
+		           vm.VISIT_METRIC_UID,
+		          vm.VISIT_METRIC_DATE
+		   FROM dbo.FDC_VISIT_METRIC vm 
+		   WHERE vm.status = 0 and dtstatus!=-3
+		     AND EXISTS (
+			     SELECT 1
+		       FROM dbo.FDC_METRIC m
+			     WHERE m.METRIC_UID = vm.METRIC_UID
+			        AND m.METRIC_CODE IN ('MTR052','MTR085','MTR051')
+			)
+			ORDER BY vm.VISIT_METRIC_UID, vm.VISIT_METRIC_DATE   -- clustered key order
+	 )
+	 UPDATE vm
+	    SET vm.dtstatus    = -3
+	 FROM dbo.FDC_VISIT_METRIC vm
+		JOIN cte
+		  ON  cte.VISIT_METRIC_UID  = vm.VISIT_METRIC_UID
+		  AND cte.VISIT_METRIC_DATE = vm.VISIT_METRIC_DATE
+		OPTION (RECOMPILE);
+
+		SET @aff = @@ROWCOUNT;
+			    COMMIT;
+			END TRY
+			BEGIN CATCH
+			    IF XACT_STATE() <> 0 ROLLBACK;
+			   THROW;
+			END CATCH;
+
+		SET @done_rows += @aff;
+
+	       SELECT
+          SYSDATETIME() AS now_local,
+          @aff          AS rows_updated_in_batch,
+          @done_rows    AS rows_done_total,
+          @total_target AS rows_total_target,
+          CAST(100.0 * @done_rows / NULLIF(@total_target,0) AS decimal(6,2)) AS pct_complete,
+          DATEDIFF(SECOND, @t_loop, SYSDATETIME()) AS seconds_last_batch,
+          DATEDIFF(SECOND, @t_start, SYSDATETIME()) AS seconds_elapsed_total;
+
+        IF (@aff < @upd_batch) BREAK;
+    END
+	    
+
+
+	SELECT
+    'SECOND_UPDATE_FIN' AS status,
+    @done_rows   AS rows_done_total,
+    @total_target AS rows_total_target,
+    CAST(100.0 * @done_rows / @total_target AS DECIMAL(6,2)) AS pct_complete,
+    CAST(DATEDIFF(SECOND, @t_start, SYSDATETIME()) AS INT)    AS seconds_total_elapsed;
+   END
+   ELSE
+    BEGIN
+        SELECT 'SECOND_UPDATE_SKIP' AS status, 'No rows with vm.status = 0 and dtstatus!=-3' AS note, @now AS now_date;
+    END
+END

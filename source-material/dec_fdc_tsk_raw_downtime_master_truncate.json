@@ -1,0 +1,64 @@
+{
+    "dag_name": "DEC_FDC_TSK_RAW_DOWNTIME_MASTER_TRUNCATE",
+    "continue_on_failure": false,
+    "dag_description": "",
+    "owner": "DEC",
+    "tags": [
+      "DEC",
+      "ACCORDIA",
+      "FDC",
+      "SP",x
+      "ORCHESTRATOR"
+    ],
+    "dag_dependencies": [],
+    "enabled": true,
+    "execution_group":"FDC_SP_TASKS",
+    "execution_group_dependencies": [],
+    "catchup": false,
+    "start_date": "2024-07-30",
+    "time_zone": "America/New_York",
+    "execution_mode": "all_done",
+    "tasks": [
+      {
+        "task_name": "dec_fdc_tsk_raw_downtime_master_truncate",
+        "task_dependencies": [],
+        "execution_on_failure": true,
+        "enabled": true,
+        "operator": "snowflake",
+        "sql":"TRUNCATE TABLE DEC_MERGE_RAW.DOWNTIME_MASTER",
+        "snowflake_conn_id":"dec_fdc_snowflake_airflow_service",
+        "task_description": "Truncate table SP DOWNTIME_MASTER",
+        "retries": 1,
+        "retry_delay": 300,
+        "max_retries":1,
+        "execution_mode": "all_success",
+        "on_callback_function_name": "send_generic_error_notification",
+        "on_callback_function_path": "mail_notification"
+      },
+      {
+        "task_name": "send_success_notification_message_downtime_master_truncate",
+        "task_dependencies": ["dec_fdc_tsk_raw_downtime_master_truncate"],
+        "execution_on_failure": true,
+        "enabled": true,
+        "operator": "plugin",
+        "task_description": "Send end notification of downtime_master_truncate",
+        "retries": 1,
+        "retry_delay": 150,
+        "max_retries":1,
+        "interval": 0,
+        "rerunOnlyFailedTasks": false,
+        "execution_mode": "all_success",
+        "plugin_name": "send_end_notification_message",
+        "plugin_path": "mail_notification",
+        "plugin_params": {"key_dict": "FDC_TSK_RAW_DOWNTIME_MASTER_TRUNCATE_send_end_notification"}
+      }
+    ],
+    "alert_policy": {
+      "connection_id": "opsgenie",
+      "alert_name": "general_notification",
+      "message": "DAG DEC_FDC_TSK_RAW_DOWNTIME_MASTER_TRUNCATE FAILURE",
+      "enabled": true,
+      "priority": "P1",
+      "description": "A task failed in the dec_fdc_tsk_raw_downtime_master_truncate . Please review the logs in Airflow to identify and resolve the issue."
+    }
+  }

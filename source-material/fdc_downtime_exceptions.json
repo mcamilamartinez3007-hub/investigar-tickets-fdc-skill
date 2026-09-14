@@ -1,0 +1,17 @@
+{
+    "fdc_downtime": {
+      "run": {
+        "command": "dbt run -s {source} -t {target} ",
+        "tasks": [
+            {
+              "source": "models/fdc_downtime_merge/downtime_exceptions",
+              "target": "dwntm_merge --full-refresh",
+              "task_id": "run_downtime_exceptions"
+            }
+        ]
+      }
+    }
+  }
+
+
+

@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Downtime — process maps</title>
+<style>
+  :root{
+    --black:#101418; --or-d:#8A3A06; --or:#C05416; --or-l:#FDF1E7; --or-p:#F7CDA8;
+    --red:#B31220; --red-d:#7A0C16; --gray:#5A6066; --hair:#C6CBCF;
+    --lbl:#F4F6F7; --rowb:#FAFBFC;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#fff;color:var(--black);font:14px/1.5 "Segoe UI",Helvetica,Arial,sans-serif}
+  header{padding:26px 40px 0;border-bottom:1px solid var(--hair)}
+  .rule{width:86px;height:4.5px;background:var(--or);margin-bottom:14px}
+  h1{margin:0 0 16px;font-size:25px;letter-spacing:-.2px}
+  .tabs{display:flex;gap:4px}
+  .tab{font:inherit;font-size:13px;font-weight:600;padding:10px 20px;border:1px solid var(--hair);
+       border-bottom:none;background:var(--lbl);border-radius:7px 7px 0 0;cursor:pointer;
+       color:var(--gray);position:relative;top:1px}
+  .tab[aria-selected="true"]{background:#fff;color:var(--black);border-bottom:1px solid #fff;
+       box-shadow:inset 0 3px 0 var(--or)}
+  main{padding:22px 40px 60px}
+  .vsub p{margin:0 0 4px;color:var(--gray);font-size:12.5px;max-width:1150px}
+  .bar{display:flex;gap:8px;align-items:center;margin:16px 0 20px}
+  button.z{font:inherit;font-size:12.5px;padding:6px 14px;border:1px solid var(--hair);
+       background:#fff;border-radius:6px;cursor:pointer;color:var(--black)}
+  button.z:hover{border-color:var(--or);color:var(--or)}
+  button.z[aria-pressed="true"]{background:var(--or);border-color:var(--or);color:#fff}
+  .hint{margin-left:auto;color:var(--gray);font-size:12px}
+  .view{display:none} .view.on{display:block}
+  .phase{margin-bottom:26px;overflow-x:auto}
+  .phase svg{display:block}
+  body.fit .phase svg{width:100%;height:auto}
+  .node.has-sub{cursor:pointer}
+  .node.has-sub:hover .shp{stroke-width:3}
+  .legend{display:flex;flex-wrap:wrap;gap:24px;margin:24px 0 18px;font-size:12px;align-items:center}
+  .legend span{display:flex;align-items:center;gap:9px}
+  .sw{width:26px;height:18px;border-radius:3px;border:1.3px solid var(--gray);background:#fff;flex:none}
+  .notes{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .card{border:1px solid var(--hair);border-left:4px solid var(--or);border-radius:6px;padding:16px 20px}
+  .card.warn{border-left-color:var(--red)}
+  .card h3{margin:0 0 10px;font-size:13px}
+  .card ul{margin:0;padding-left:18px}
+  .card li{color:var(--gray);font-size:12.5px;margin-bottom:6px}
+  aside{position:fixed;top:0;right:0;width:440px;max-width:92vw;height:100%;background:#fff;
+        border-left:1px solid var(--hair);box-shadow:-14px 0 40px rgba(16,20,24,.10);
+        transform:translateX(105%);transition:transform .22s ease;overflow-y:auto;z-index:20}
+  aside.open{transform:none}
+  .ah{padding:22px 26px 16px;border-bottom:1px solid var(--hair);position:sticky;top:0;background:#fff}
+  .ah .tag{display:inline-block;font-size:11px;font-weight:700;color:var(--or);
+           border:1px solid var(--or);border-radius:20px;padding:2px 10px;margin-bottom:10px}
+  .ah h2{margin:0;font-size:17px} .ah p{margin:8px 0 0;color:var(--gray);font-size:12.5px}
+  .ab{padding:20px 26px 60px}
+  .step{position:relative;padding:0 0 20px 42px}
+  .step:not(:last-child)::before{content:"";position:absolute;left:14px;top:26px;bottom:0;width:1.5px;background:var(--hair)}
+  .step .n{position:absolute;left:0;top:2px;width:29px;height:29px;border-radius:50%;
+        background:var(--or);color:#fff;font-size:10.5px;font-weight:700;
+        display:flex;align-items:center;justify-content:center}
+  .step.check .n{background:#fff;color:var(--or);border:1.8px solid var(--or)}
+  .step.fail .n{background:var(--black)}
+  .step h4{margin:4px 0 4px;font-size:13.5px}
+  .step p{margin:0;color:var(--gray);font-size:12.5px}
+  .step code,.card code{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;
+        color:var(--or-d);background:var(--or-l);padding:1px 5px;border-radius:3px}
+  .empty{border:1.5px dashed var(--or);border-radius:8px;padding:20px;color:var(--gray);font-size:12.5px}
+  .close{position:absolute;top:20px;right:22px;border:none;background:none;font-size:22px;
+        line-height:1;color:var(--gray);padding:4px 8px;cursor:pointer}
+  details{margin-top:30px;border-top:1px solid var(--hair);padding-top:18px}
+  summary{cursor:pointer;font-weight:600;font-size:13px}
+  details pre{background:var(--lbl);border:1px solid var(--hair);border-radius:6px;padding:16px;
+        overflow-x:auto;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.6}
+  details p{color:var(--gray);font-size:12.5px;max-width:920px}
+</style>
+</head>
+<body class="fit">
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     DATA BLOCK — the only part you need to edit.
+     Below it is a renderer: it computes layout, arrows and text wrapping
+     from what you write here. No coordinates. See "How to edit this file".
+     ═══════════════════════════════════════════════════════════════════════ -->
+<script>
+const AIRFLOW = ["Airflow pipeline trigger"];
+
+/* ── Sub-task panels. Defined once and referenced from both tabs so they
+      cannot drift apart. Attach with `subprocess: SP_XXX` + `shape:"proc"`. */
+
+const SP_CHECK = {
+  title: "CHECK_DOWNTIME_MIRROR_SOURCES",
+  note: "A dbt source test, not a load. It runs as a BashOperator inside FDC_DOWNTIME_ORCHESTRATOR_MERGE and gates everything after it.",
+  steps: [
+    { n:"1", kind:"task", title:"Run the tagged tests",
+      detail:"<code>dbt test -s tag:downtime_merge -t dwntm_merge</code> against the <code>fdc_app_raw_merge</code> source." },
+    { n:"2", kind:"check", title:"12 mirror tables, not_empty on the UID",
+      detail:"Transactional: <code>visit_metric</code>, <code>visit_asset</code>, <code>visit_site</code>, <code>fdc_downtime</code>. Master: <code>asset</code>, <code>asset_class</code>, <code>asset_type</code>, <code>metric</code>, <code>metric_domain</code>, <code>route</code>, <code>site</code>, <code>operator</code>." },
+    { n:"3", kind:"check", title:"Not covered",
+      detail:"<code>downtime_master</code> and <code>downtime_exceptions</code> are declared in the same source with no tags and no tests, so this gate does not look at them." },
+    { n:"4", kind:"fail", title:"On failure",
+      detail:"<code>faliure_on_DAG</code> mails <code>FDC_DWNTM_emailOnFailure_to</code> and the orchestrator stops before the exceptions and master models run." }
+  ]
+};
+
+const SP_EXCEPTIONS = {
+  title: "FDC_DOWNTIME_EXCEPTIONS_MERGE",
+  note: "Compares FDC, Enertia and the current master, and writes one row per detected inconsistency. Triggered by the orchestrator with wait_for_completion.",
+  steps: [
+    { n:"1", kind:"task", title:"DAG triggered",
+      detail:"<code>schedule=None</code>: it only runs when <code>FDC_DOWNTIME_ORCHESTRATOR_MERGE</code> triggers it. Config: <code>fdc_downtime_exceptions.json</code>." },
+    { n:"2", kind:"task", title:"Run the dbt model",
+      detail:"<code>dbt run -s models/fdc_downtime_merge/downtime_exceptions -t dwntm_merge --full-refresh</code>." },
+    { n:"3", kind:"task", title:"Build the three comparison sets",
+      detail:"<code>stg_pre_upsert_downtime_exceptions_merge</code> reads Enertia (<code>stg_ene_vw_downtime_merge</code>), FDC (<code>stg_fdc_stg_dwntime_merge</code>) and the current master (<code>fdc_app_raw_merge.downtime_master</code>)." },
+    { n:"4", kind:"check", title:"Previous existing downtime",
+      detail:"Master and Enertia windows overlap for the same <code>ASSETCODE</code>, with <code>MST.STATUS = 1</code>." },
+    { n:"5", kind:"check", title:"Missing data in Enertia",
+      detail:"Enertia begin is today or later, or the reason is not in the MTR085 domain, or begin is after end." },
+    { n:"6", kind:"check", title:"New record inconsistency",
+      detail:"An FDC record and an Enertia record overlap but do not share the same <code>DTBEGINDATETIME</code>, and neither is in the master yet." },
+    { n:"7", kind:"check", title:"End date inconsistency from Enertia",
+      detail:"The record is in the master, Enertia's end date is not the 12-31-2078 sentinel, and <code>LASTUPDATEID</code> is blank \u2014 an edit not made by the system." },
+    { n:"8", kind:"task", title:"Merge into DOWNTIME_EXCEPTIONS",
+      detail:"Incremental merge on <code>surrogate_key</code>; business key <code>AssetTypeCode + ASSETCODE + FDCBEGINDATETIME + ENEBEGINDATETIME + MSTRBEGINDATETIME</code>. Every row lands as <code>INCONSISTENCYSTATUS = 'Pending'</code>." }
+  ]
+};
+
+const SP_MASTER = {
+  title: "FDC_DOWNTIME_MASTER_MERGE",
+  note: "Rebuilds the downtime master. Enertia is the only source \u2014 no FDC record enters the master.",
+  steps: [
+    { n:"1", kind:"task", title:"DAG triggered",
+      detail:"<code>schedule=None</code>, triggered after the exceptions DAG completes. Config: <code>fdc_downtime_master.json</code>." },
+    { n:"2", kind:"task", title:"Run the dbt model",
+      detail:"<code>dbt run -s models/fdc_downtime_merge/downtime_master -t dwntm_merge --full-refresh</code>." },
+    { n:"3", kind:"task", title:"Read Enertia only",
+      detail:"<code>stg_pre_upsert_downtime_master_merge</code> selects from <code>stg_ene_vw_downtime_merge</code> and nothing else. The model comment states the source is filtered to the last 6 months." },
+    { n:"4", kind:"task", title:"Stamp the source",
+      detail:"<code>DTStatus = 2</code> (Enertia), <code>STATUS = 1</code> (active), <code>FDCUpdateID = NULL</code>, <code>CREATION_DATE = COALESCE(LASTUPDATED, now)</code>." },
+    { n:"5", kind:"task", title:"Merge into DOWNTIME_MASTER",
+      detail:"Incremental merge on <code>surrogate_key</code>; business key <code>AssetTypeCode + ASSETCODE + DTBEGINDATETIME + STATUS</code>." }
+  ]
+};
+
+const SP_MERGE = {
+  title: "FDC_DOWNTIME_MERGE",
+  note: "The DAG that actually writes downtime back into FDC. Triggered by the orchestrator in parallel with MERGE_FDC_DIM_IMP_PDMASDOWNTIME; its 13 tasks run strictly in sequence.",
+  steps: [
+    { n:"1", kind:"task", title:"Start notification",
+      detail:"Mail plugin, key <code>ACCORDIA_FDC_DOWNTIME_MERGE_send_start_notification</code>." },
+    { n:"2", kind:"check", title:"Mirror source test \u2014 again",
+      detail:"<code>dbt test -s tag:downtime_merge -t dwntm_merge</code>: the same gate the orchestrator already ran before the exceptions and master models." },
+    { n:"3", kind:"task", title:"fdc_stg_downtime_merge",
+      detail:"Reads <code>fdc_app_raw_merge.downtime_master</code> and reshapes it into FDC rows. Keeps FDC's own identifiers by joining <code>MST.FDCUpdateID = fdc_downtime.DOWNTIME_UID</code>, so the write updates instead of duplicating. Key: <code>ASSET_UID + BEGIN_DATETIME + IS_ACTIVE</code>." },
+    { n:"4", kind:"task", title:"fdc_stg_visit_metric_merge",
+      detail:"Expands each downtime row into three metric rows: <code>MTR052</code> begin, <code>MTR085</code> reason, <code>MTR051</code> end \u2014 the last one only when the end date is not the 12-31-2078 sentinel. Key: <code>VISIT_ASSET_UID + METRIC_UID</code>." },
+    { n:"5", kind:"task", title:"fdc_stg_visit_asset_merge",
+      detail:"Built from the metric and downtime models. Key: <code>VISIT_SITE_UID + ASSET_UID + VISIT_ASSET_DATE</code>." },
+    { n:"6", kind:"task", title:"fdc_stg_visit_site_merge",
+      detail:"Built from the metric and asset models. Key: <code>SITE_UID + OPERATOR_UID + VISIT_DATE</code>." },
+    { n:"7", kind:"task", title:"Usp_Inactivate_OldDwntmRecords",
+      detail:"On FDC's SQL Server. Two passes over <code>FDC_VISIT_METRIC</code>, both scoped to metrics <code>MTR052</code>, <code>MTR085</code> and <code>MTR051</code> \u2014 exactly the three the previous model generates. Pass 1: every row with <code>status = 1</code> becomes <code>status = 0</code>, <code>dtstatus = -3</code>, <code>LAST_UPDATE = now</code>. Pass 2: rows already inactive but not yet flagged get <code>dtstatus = -3</code>, leaving LAST_UPDATE untouched. Batches of 100,000 in clustered-key order. There is no date filter: every run inactivates the entire downtime metric set." },
+    { n:"8", kind:"task", title:"Usp_Delete_OldDwntmRecords",
+      detail:"Takes <code>@cutoff = MAX(LAST_UPDATE)</code> among rows with <code>status = 0</code> and <code>dtstatus = -3</code> \u2014 the timestamp the previous step just wrote \u2014 then deletes every such row with <code>LAST_UPDATE &lt; @cutoff</code>, in batches of 100,000. Effective retention is one cycle: the generation this run inactivated survives, everything inactivated earlier is purged. There is no absolute retention window." },
+    { n:"9", kind:"task", title:"Four Databricks reverse-ETL pipelines",
+      detail:"<code>fdc_downtime_merge</code>, <code>fdc_visit_site_merge</code>, <code>fdc_visit_asset_merge</code>, <code>fdc_visit_metric_merge</code>, in that order. Source <code>dec_fdc_merge_snowflake</code>, destination <code>dec_fdc_mssql_dwntm_merge</code>. This is where the data lands in FDC." },
+    { n:"10", kind:"task", title:"End notification",
+      detail:"Mail plugin. Any task failure also raises an OpsGenie P1 alert." }
+  ]
+};
+
+const SP_ORCH = {
+  title: "FDC_DOWNTIME_ORCHESTRATOR_MERGE",
+  note: "The parent DAG, scheduled by the downtime_schedule variable. Each triggered DAG runs with wait_for_completion.",
+  steps: [
+    { n:"1", kind:"check", title:"CHECK_DOWNTIME_MIRROR_SOURCES",
+      detail:"A BashOperator inside this DAG, not a separate one: <code>dbt test -s tag:downtime_merge -t dwntm_merge</code>." },
+    { n:"2", kind:"task", title:"FDC_DOWNTIME_EXCEPTIONS",
+      detail:"Triggers <code>FDC_DOWNTIME_EXCEPTIONS_MERGE</code> and waits." },
+    { n:"3", kind:"task", title:"FDC_DOWNTIME_MASTER",
+      detail:"Triggers <code>FDC_DOWNTIME_MASTER_MERGE</code> and waits." },
+    { n:"4", kind:"task", title:"Fan-out \u2014 two DAGs in parallel",
+      detail:"<code>MERGE_FDC_DIM_IMP_PDMASDOWNTIME</code> and <code>FDC_DOWNTIME_MERGE</code> are triggered together, not one after the other. The diagram draws this tail as a single sequence." },
+    { n:"5", kind:"fail", title:"On failure",
+      detail:"<code>faliure_on_DAG</code> mails <code>FDC_DWNTM_emailOnFailure_to</code> over SMTP." }
+  ]
+};
+
+const DIAGRAM = {
+title: "Downtime — process maps",
+
+views: [
+
+/* ══════════════ VIEW 1 · CURRENT PROCESS ══════════════ */
+{
+  id: "current",
+  tab: "1 · Current process",
+  subtitle: [
+    "As-built process. Lane = the system where the step's work lands; the Airflow lane carries control flow only.",
+    "Double bar = sub-tasks. Click to open."
+  ],
+  lanes: [
+    { id:"ops",  name:"Operations",            sub:"Manual action" },
+    { id:"fdc",  name:"FDC / SQL Server",      sub:"Source and target" },
+    { id:"air",  name:"Airflow orchestration", sub:"Triggers and gates" },
+    { id:"snow", name:"Snowflake",             sub:"Processing" },
+    { id:"ene",  name:"Enertia",               sub:"External handoff" },
+    { id:"exc",  name:"Exception handling",    sub:"Failure path" }
+  ],
+  phases: [
+    {
+      title:"Phase 1 — Rebuild in FDC, extract to Snowflake, load the Enertia stage   ·   19:00 – 21:30 CST",
+      cols: 16,
+      path: [
+        { id:"n1",  lane:"air",  col:0,  kind:"term",  shape:"term", badge:"1",  title:"Start" },
+        { id:"n2",  lane:"air",  col:1,  kind:"flow",  shape:"box",  badge:"2",  title:"Airflow DAG triggered", sub:["19:30 CST"] },
+        { id:"n3",  lane:"fdc",  col:2,  kind:"flow",  shape:"proc", badge:"3",  title:"USP_FDC_DOWNTIME_REBUILD", sub:["Stored procedure"] },
+        { id:"n4",  lane:"fdc",  col:3,  kind:"store", shape:"cyl",  badge:"4",  title:"FDC SQL Server", sub:["Downtime records"] },
+        { id:"n5",  lane:"snow", col:4,  kind:"flow",  shape:"box",  badge:"5",  title:"FDC_TO_SNOWFLAKE_MIRRORS_ORCHESTRATOR", sub:AIRFLOW },
+        { id:"n6",  lane:"air",  col:5,  kind:"gate",  shape:"dia",  badge:"6",  title:"Successful?", next:"Yes" },
+        { id:"n7",  lane:"snow", col:6,  kind:"store", shape:"cyl",  badge:"7",  title:"Snowflake Data Warehouse" },
+        { id:"n8",  lane:"snow", col:7,  kind:"flow",  shape:"box",  badge:"8",  title:"TSK_RAW_DOWNTIME_MASTER_TRUNCATE", sub:["TRUNCATE DEC_MERGE_RAW.DOWNTIME_MASTER"] },
+        { id:"n9",  lane:"snow", col:8,  kind:"flow",  shape:"proc", badge:"9",  title:"CHECK_DOWNTIME_MIRROR_SOURCES", sub:AIRFLOW, subprocess:SP_CHECK },
+        { id:"n10", lane:"snow", col:9,  kind:"flow",  shape:"proc", badge:"10", title:"FDC_DOWNTIME_MASTER", sub:AIRFLOW, subprocess:SP_MASTER },
+        { id:"n11", lane:"snow", col:10, kind:"flow",  shape:"box",  badge:"11", title:"FDC_DIM_IMP_PDMASDOWNTIME", sub:AIRFLOW },
+        { id:"n12", lane:"air",  col:11, kind:"gate",  shape:"dia",  badge:"12", title:"Processing complete?", next:"Yes" },
+        { id:"n13", lane:"ene",  col:12, kind:"flow",  shape:"box",  badge:"13", title:"Load into Enertia stage" },
+        { id:"n14", lane:"ene",  col:13, kind:"mile",  shape:"term", badge:"14", title:"Transfer complete", sub:["before 21:30 CST"] }
+      ],
+      extra: [
+        { id:"op1", lane:"ops", col:0, kind:"mile", shape:"trap", title:"Operator sync", sub:["19:00 CST"] },
+        { id:"sn1", lane:"exc", col:8, kind:"fail", shape:"box",  title:"Send notification" }
+      ],
+      feeds: [ { from:"op1", to:"n1", label:"Starts the cycle" } ],
+      drops: [ { from:"n6", to:"sn1", label:"No" }, { from:"n12", to:"sn1", label:"No" } ],
+      exitConnector: "A"
+    },
+    {
+      title:"Phase 2 — Enertia refresh, freshness check, merge back into FDC   ·   from 23:30 CST",
+      cols: 16,
+      entryConnector: "A",
+      path: [
+        { id:"n15", lane:"ene",  col:1,  kind:"wait",  shape:"delay", badge:"15", title:"Wait for Enertia refresh", sub:["until 23:30 CST"] },
+        { id:"n16", lane:"snow", col:2,  kind:"flow",  shape:"box",   badge:"16", title:"DEC_ENERTIA_VW_DOWNTIME_ALL_FULL", sub:AIRFLOW },
+        { id:"n17", lane:"snow", col:3,  kind:"flow",  shape:"box",   badge:"17", title:"Freshness check", sub:["24 h over Last_update"] },
+        { id:"n18", lane:"air",  col:4,  kind:"gate",  shape:"dia",   badge:"18", title:"New records?", next:"Yes" },
+        { id:"n19", lane:"snow", col:5,  kind:"flow",  shape:"box",   badge:"19", title:"TSK_RAW_DOWNTIME_MASTER_TRUNCATE", sub:["TRUNCATE DEC_MERGE_RAW.DOWNTIME_MASTER"] },
+        { id:"n20", lane:"snow", col:6,  kind:"flow",  shape:"proc",  badge:"20", title:"CHECK_DOWNTIME_MIRROR_SOURCES", sub:AIRFLOW, subprocess:SP_CHECK },
+        { id:"n21", lane:"snow", col:7,  kind:"flow",  shape:"proc",  badge:"21", title:"FDC_DOWNTIME_EXCEPTIONS", sub:AIRFLOW, subprocess:SP_EXCEPTIONS },
+        { id:"n22", lane:"snow", col:8,  kind:"flow",  shape:"proc",  badge:"22", title:"FDC_DOWNTIME_MASTER", sub:AIRFLOW, subprocess:SP_MASTER },
+
+        // ── Step 23: the one with documented sub-tasks. Fill in `subprocess.steps`.
+        { id:"n23", lane:"snow", col:9,  kind:"flow",  shape:"proc",  badge:"23",
+          title:"ACCORDIA_FDC_DOWNTIME_ORCHESTRATOR_MERGE", sub:AIRFLOW, subprocess:SP_ORCH },
+
+        { id:"n24", lane:"snow", col:10, kind:"flow",  shape:"proc", badge:"24", title:"FDC_DOWNTIME_MERGE", sub:["Writes back into FDC"], subprocess:SP_MERGE },
+        { id:"n25", lane:"air",  col:11, kind:"gate",  shape:"dia",  badge:"25", title:"Successful?", next:"Yes" },
+        { id:"n26", lane:"fdc",  col:12, kind:"store", shape:"cyl",  badge:"26", title:"FDC SQL Server", sub:["Updated downtime"] },
+        { id:"n27", lane:"air",  col:13, kind:"flow",  shape:"box",  badge:"27", title:"DEC-FDC-PROD-LAST30DNONEMPTYVAL", sub:["Airflow DAG"] },
+        { id:"n28", lane:"fdc",  col:14, kind:"flow",  shape:"proc", badge:"28", title:"Stored procedures",
+          sub:["Usp_Last30DNonEmptyVal_CF","Usp_UpdateForceSyncSite_CF","usp_Load_Asset_configuration"] },
+        { id:"n29", lane:"air",  col:15, kind:"term",  shape:"term", badge:"29", title:"Process completed" }
+      ],
+      extra: [ { id:"sn2", lane:"exc", col:6, kind:"fail", shape:"box", title:"Send notification" } ],
+      feeds: [],
+      drops: [ { from:"n18", to:"sn2", label:"No" }, { from:"n25", to:"sn2", label:"No" } ]
+    }
+  ],
+  legend: [
+    ["term","Start / end"], ["mile","Time commitment"], ["wait","External wait"],
+    ["flow","Process"], ["store","Data store"], ["gate","Decision"], ["fail","Exception"]
+  ],
+  notes: [
+    { head:"What the code shows", items:[
+      "Steps 20-24 are tasks inside FDC_DOWNTIME_ORCHESTRATOR_MERGE, not siblings. It ends in a fan-out: MERGE_FDC_DIM_IMP_PDMASDOWNTIME to Enertia and FDC_DOWNTIME_MERGE to FDC, in parallel. Open step 23.",
+      "Step 24 is a wipe and replace. Two stored procedures inactivate the entire downtime metric set and purge the previous generation; then four Databricks pipelines write the current one.",
+      "Cleanup and write are scoped to the same three metrics: MTR052 begin, MTR085 reason, MTR051 end.",
+      "Everything returning to FDC comes from DOWNTIME_MASTER, built from Enertia only. FDC edits reach it through the exceptions model.",
+      "The operator sync at 19:00 CST starts the cycle; the DAG fires at 19:30."
+    ]},
+    { head:"Questions raised by the code", warn:true, items:[
+      "Between the stored procedures and the last mirror, FDC has no active downtime and the previous generation is already deleted. No rollback point. Should the delete move after the write?",
+      "Usp_Delete takes its cutoff from MAX(LAST_UPDATE) in the data: retention is one cycle, with no absolute window.",
+      "Every model is materialized='incremental' with strategy='merge', and every command passes --full-refresh. The merge never runs.",
+      "stg_pre_upsert_fdc_downtime_merge has a 20-day LASTUPDATED lookback commented out \u2014 a third time window alongside the 24 h freshness and the 5-day extraction lookback.",
+      "The mirror test runs twice (orchestrator, then FDC_DOWNTIME_MERGE), and neither run covers downtime_master or downtime_exceptions: no tags, no tests.",
+      "Is DEC_MERGE_RAW.DOWNTIME_MASTER the same table as fdc_app_raw_merge.downtime_master? If so, the truncate empties the exceptions comparison base and three of the four exception types cannot fire.",
+      "The truncate DAG uses the snowflake operator, not an Azure runbook."
+    ]}
+  ]
+},
+
+/* ══════════════ VIEW 2 · NEW LOGIC (per the impact document) ══════════════ */
+{
+  id: "proposed",
+  tab: "2 · New logic — Historian / Event Composite",
+  subtitle: [
+    "Target flow per Downtime ETL Impact Based on Proposed Schematic. Red = affected: new objects, changed sources, objects conditional on the input contract.",
+    "The document covers data flow only. The Airflow wrapper — operator sync, DAG triggers, gates, notifications — is carried over from the as-built process and is our inference."
+  ],
+  lanes: [
+    { id:"ops",  name:"Operations",            sub:"Manual action" },
+    { id:"fdc",  name:"FDC / SQL Server",      sub:"Source and target" },
+    { id:"air",  name:"Airflow orchestration", sub:"Triggers and gates" },
+    { id:"snow", name:"Snowflake",             sub:"Mapping and contracts" },
+    { id:"hist", name:"Historian / Event Composite", sub:"New consolidation layer" },
+    { id:"ene",  name:"Enertia",               sub:"External handoff" },
+    { id:"exc",  name:"Exception handling",    sub:"Failure path" }
+  ],
+  phases: [
+    {
+      title:"Phase 1 — Outbound:  FDC  →  Snowflake  →  Historian  →  back to Snowflake  →  Enertia",
+      cols: 24,
+      path: [
+        { id:"t1",  lane:"air",  col:0,  kind:"term",  shape:"term", badge:"1",  title:"Start" },
+        { id:"t2",  lane:"air",  col:1,  kind:"flow",  shape:"box",  badge:"2",  title:"Airflow DAG triggered", sub:["19:30 CST"] },
+        { id:"t3",  lane:"fdc",  col:2,  kind:"flow",  shape:"proc", badge:"3",  title:"USP_FDC_DOWNTIME_REBUILD", sub:["Stored procedure"] },
+        { id:"t4",  lane:"fdc",  col:3,  kind:"store", shape:"cyl",  badge:"4",  title:"FDC SQL Server", sub:["Downtime records"] },
+        { id:"t5",  lane:"snow", col:4,  kind:"flow",  shape:"box",  badge:"5",  title:"FDC_TO_SNOWFLAKE_MIRRORS_ORCHESTRATOR", sub:AIRFLOW },
+        { id:"t6",  lane:"air",  col:5,  kind:"gate",  shape:"dia",  badge:"6",  title:"Successful?", next:"Yes" },
+        { id:"t7",  lane:"snow", col:6,  kind:"store", shape:"cyl",  badge:"7",  title:"Snowflake Data Warehouse" },
+        { id:"t8",  lane:"snow", col:7,  kind:"flow",  shape:"box",  badge:"8",  title:"repl_imp_pdmasdowntime", sub:["Now prepares the Historian input"], changed:true },
+        { id:"t9",  lane:"hist", col:8,  kind:"flow",  shape:"box",  badge:"9",  title:"inbound_fdc_downtime()", sub:["New: loads the FDC input"], changed:true },
+        { id:"t10", lane:"hist", col:9,  span:2, kind:"flow", shape:"term", badge:"10", title:"Event Composite", sub:["Client-owned process \u2014 consolidation and business logic"], changed:true },
+        { id:"t11", lane:"hist", col:11, kind:"gate",  shape:"dia",  badge:"11", title:"Conditional Enertia feed", sub:["Scope undefined"], changed:true, pending:true, next:"Yes" },
+        { id:"t12", lane:"hist", col:12, kind:"flow",  shape:"box",  badge:"12", title:"dev_v_dataexport_downtime_to_enertia", sub:["New: candidate Enertia source"], changed:true },
+        { id:"t13", lane:"snow", col:13, kind:"store", shape:"cyl",  badge:"13", title:"Snowflake Data Warehouse", sub:["Now loaded from the Historian output"], changed:true },
+        { id:"t14", lane:"snow", col:14, kind:"flow",  shape:"box",  badge:"14", title:"TSK_RAW_DOWNTIME_MASTER_TRUNCATE", sub:["TRUNCATE DEC_MERGE_RAW.DOWNTIME_MASTER"] },
+        { id:"t15", lane:"snow", col:15, kind:"flow",  shape:"proc", badge:"15", title:"CHECK_DOWNTIME_MIRROR_SOURCES", sub:AIRFLOW, subprocess:SP_CHECK },
+        { id:"t16", lane:"snow", col:16, kind:"flow",  shape:"proc", badge:"16", title:"FDC_DOWNTIME_MASTER", sub:AIRFLOW, subprocess:SP_MASTER },
+        { id:"t17", lane:"snow", col:17, kind:"flow",  shape:"box",  badge:"17", title:"FDC_DIM_IMP_PDMASDOWNTIME", sub:AIRFLOW },
+        { id:"t18", lane:"snow", col:18, kind:"flow",  shape:"box",  badge:"18", title:"IMP_PDMASDOWNTIME", sub:["Contract preserved"] },
+        { id:"t19", lane:"air",  col:19, kind:"gate",  shape:"dia",  badge:"19", title:"Processing complete?", next:"Yes" },
+        { id:"t20", lane:"snow", col:20, kind:"flow",  shape:"box",  badge:"20", title:"MERGE_FDC_DIM_IMP_PDMASDOWNTIME", sub:["Reverse ETL, unchanged"] },
+        { id:"t21", lane:"ene",  col:21, kind:"store", shape:"cyl",  badge:"21", title:"dbo.imp_pdmasdowntime", sub:["DGO_ENERTIA_INTERFACES"] },
+        { id:"t22", lane:"ene",  col:22, kind:"mile",  shape:"term", badge:"22", title:"Transfer complete", sub:["before 21:30 CST"] }
+      ],
+      extra: [
+        { id:"tp1", lane:"ops", col:0,  kind:"mile", shape:"trap", title:"Operator sync", sub:["19:00 CST"] },
+        { id:"ts1", lane:"exc", col:5,  kind:"fail", shape:"box",  title:"Send notification" },
+        { id:"te1", lane:"exc", col:11, kind:"fail", shape:"box",  title:"Stays in Event Composite", sub:["Not sent to Enertia"], changed:true },
+        { id:"ts2", lane:"exc", col:19, kind:"fail", shape:"box",  title:"Send notification" }
+      ],
+      feeds: [ { from:"tp1", to:"t1", label:"Starts the cycle" } ],
+      drops: [ { from:"t6", to:"ts1", label:"No" }, { from:"t11", to:"te1", label:"No" }, { from:"t19", to:"ts2", label:"No" } ],
+      exitConnector: "A"
+    },
+    {
+      title:"Phase 2 — Inbound:  Enertia  →  Historian  →  back to Snowflake  →  FDC",
+      cols: 24,
+      entryConnector: "A",
+      path: [
+        { id:"t23", lane:"ene",  col:1,  kind:"wait",  shape:"delay", badge:"23", title:"Wait for Enertia refresh", sub:["until 23:30 CST"] },
+        { id:"t24", lane:"ene",  col:2,  kind:"store", shape:"cyl",   badge:"24", title:"vw_downtime_all", sub:["Now feeds Historian, not FDC"], changed:true },
+        { id:"t25", lane:"snow", col:3,  kind:"flow",  shape:"box",   badge:"25", title:"repl_vw_en_downtime_all", sub:["E! DT Dag push · Historian input"], changed:true },
+        { id:"t26", lane:"hist", col:4,  kind:"flow",  shape:"box",   badge:"26", title:"inbound_e_downtime()", sub:["New: loads the Enertia input"], changed:true },
+        { id:"t27", lane:"hist", col:5,  span:2, kind:"flow", shape:"term", badge:"27", title:"Event Composite", sub:["Client-owned process \u2014 consolidation and business logic"], changed:true },
+        { id:"t28", lane:"hist", col:7,  kind:"flow",  shape:"box",   badge:"28", title:"dev_v_dataexport_downtime_to_fdc", sub:["New: candidate FDC merge source"], changed:true },
+        { id:"t29", lane:"snow", col:8,  kind:"store", shape:"cyl",   badge:"29", title:"Snowflake Data Warehouse", sub:["Now loaded from the Historian output"], changed:true },
+        { id:"t30", lane:"snow", col:9,  kind:"flow",  shape:"box",   badge:"30", title:"Freshness check", sub:["Moves to the Historian output","timestamp field undefined"], changed:true },
+        { id:"t31", lane:"air",  col:10,  kind:"gate",  shape:"dia",   badge:"31", title:"New records?", next:"Yes" },
+        { id:"t32", lane:"snow", col:11, kind:"flow",  shape:"box",   badge:"32", title:"TSK_RAW_DOWNTIME_MASTER_TRUNCATE", sub:["TRUNCATE DEC_MERGE_RAW.DOWNTIME_MASTER"] },
+        { id:"t33", lane:"snow", col:12, kind:"flow",  shape:"proc",  badge:"33", title:"CHECK_DOWNTIME_MIRROR_SOURCES", sub:AIRFLOW, subprocess:SP_CHECK },
+        { id:"t34", lane:"snow", col:13, kind:"flow",  shape:"proc",  badge:"34", title:"FDC_DOWNTIME_EXCEPTIONS", sub:["May be simplified or dropped"], changed:true, subprocess:SP_EXCEPTIONS },
+        { id:"t35", lane:"snow", col:14, kind:"flow",  shape:"proc",  badge:"35", title:"FDC_DOWNTIME_MASTER", sub:["May be simplified or dropped"], changed:true, subprocess:SP_MASTER },
+        { id:"t36", lane:"snow", col:15, kind:"flow",  shape:"proc",  badge:"36", title:"ACCORDIA_FDC_DOWNTIME_ORCHESTRATOR_MERGE", sub:["Unchanged only if the contract holds"], changed:true, subprocess:SP_ORCH },
+        { id:"t37", lane:"snow", col:16, kind:"flow",  shape:"proc",  badge:"37", title:"FDC_DOWNTIME_MERGE", sub:["Writes back into FDC"], subprocess:SP_MERGE },
+        { id:"t38", lane:"air",  col:17, kind:"gate",  shape:"dia",   badge:"38", title:"Successful?", next:"Yes" },
+        { id:"t39", lane:"fdc",  col:18, kind:"store", shape:"cyl",   badge:"39", title:"FDC SQL Server", sub:["Updated downtime"] },
+        { id:"t40", lane:"air",  col:19, kind:"flow",  shape:"box",   badge:"40", title:"DEC-FDC-PROD-LAST30DNONEMPTYVAL", sub:["Airflow DAG"] },
+        { id:"t41", lane:"fdc",  col:20, kind:"flow",  shape:"proc",  badge:"41", title:"Stored procedures",
+          sub:["Usp_Last30DNonEmptyVal_CF","Usp_UpdateForceSyncSite_CF","usp_Load_Asset_configuration"] },
+        { id:"t42", lane:"air",  col:21, kind:"term",  shape:"term",  badge:"42", title:"Process completed" }
+      ],
+      extra: [
+        { id:"ts3", lane:"exc", col:10,  kind:"fail", shape:"box", title:"Send notification" },
+        { id:"ts4", lane:"exc", col:17, kind:"fail", shape:"box", title:"Send notification" }
+      ],
+      feeds: [],
+      drops: [ { from:"t31", to:"ts3", label:"No" }, { from:"t38", to:"ts4", label:"No" } ]
+    }
+  ],
+  legend: [
+    ["changed","Affected by the proposed change"], ["pending","Not yet defined or named"], ["client","Client-owned process"],
+    ["term","Start / end"], ["mile","Time commitment"], ["wait","External wait"],
+    ["flow","Process"], ["store","Data store"], ["gate","Decision"], ["fail","Exception"]
+  ],
+  notes: [
+    { head:"What the document claims", items:[
+      "Only the Historian lane is new: inbound_fdc_downtime(), inbound_e_downtime(), Event Composite and the two output views. Everything else exists and changes source or scope.",
+      "Event Composite is wider and stadium-shaped because it is the client\u2019s process, set apart the same way in their schematic. We consume its output; its logic is theirs.",
+      "The Historian output returns to the Snowflake warehouse (13, 29). From there the pipeline runs the same objects as today: same code, different input.",
+      "Contracts preserved: IMP_PDMASDOWNTIME to Enertia (18) and the merge input to FDC. Only the source changes.",
+      "Steps 34-37 are conditional \u2014 they survive only if the Historian output is not already merge-ready."
+    ]},
+    { head:"Open items \u2014 do not present as settled", warn:true, items:[
+      "Steps 14-17 and 32-33 read the warehouse exactly as today. That holds only if the Historian output lands in the same raw tables \u2014 unconfirmed.",
+      "Step 11 rests on one phrase in the client\u2019s scope, \u2018conditional Enertia feed\u2019. Its scope is unsettled: per-record filter, or a gate on whether the feed runs at all. The No branch is our wording, and no such condition exists today.",
+      "Nothing is named for the load from the Historian view into the warehouse (12 to 13, 28 to 29) \u2014 the most likely home for the document\u2019s generic \u2018new or adjusted dbt staging model\u2019. It needs a name and an owner.",
+      "The TO BE scope says summary Historian back to FDC. If it returns aggregated rather than row by row, the FDCUpdateID join inside step 37 breaks and the preserved-contract claim fails.",
+      "DIMM appears in the client\u2019s TO BE panel; the document never mentions it, so it has no lane here.",
+      "Tab 1 shows Load into Enertia stage where this tab shows steps 18-20: same delivery, different granularity."
+    ]}
+  ]
+
+}
+
+]};
+</script>
+<!-- ══════════════ end of data block — renderer below ══════════════ -->
+
+<header>
+  <div class="rule"></div>
+  <h1 id="ttl"></h1>
+  <div class="tabs" id="tabs" role="tablist"></div>
+</header>
+
+<main>
+  <div id="views"></div>
+
+  <details>
+    <summary>How to edit this file</summary>
+    <p>Everything is in the <strong>DATA BLOCK</strong> at the top of the file, between the two banner comments. Open it in any text editor. There are no coordinates: positions, arrows and text wrapping are computed from <code>lane</code> and <code>col</code>.</p>
+    <p><strong>Add a step:</strong> insert an object into a phase's <code>path</code> array, in flow order. Give it a free <code>col</code> and the <code>lane</code> id of the system where its work lands. Raise <code>cols</code> if you run out. Arrows are drawn automatically.</p>
+    <p><strong>Make a step wider:</strong> add <code>span:2</code> (or more). It then occupies that many columns, so the next step needs a <code>col</code> that far along.</p>
+    <p><strong>Mark a step as affected:</strong> add <code>changed:true</code>. It gets a red outline and a red corner tab. Add <code>pending:true</code> as well when the object or rule is not defined yet — the outline turns dashed.</p>
+    <p><strong>Label an arrow:</strong> add <code>next:"..."</code> to the step it leaves from.</p>
+    <p><strong>Add a tab:</strong> append an object to <code>views</code> with its own <code>tab</code>, <code>lanes</code>, <code>phases</code>, <code>legend</code> and <code>notes</code>.</p>
+    <p><strong>Add sub-tasks:</strong> give the step <code>shape:"proc"</code> and a <code>subprocess</code> object. It becomes clickable.</p>
+    <pre>{ id:"n23", lane:"snow", col:9, kind:"flow", shape:"proc", badge:"23",
+  title:"ACCORDIA_FDC_DOWNTIME_ORCHESTRATOR_MERGE", sub:AIRFLOW,
+  subprocess: {   // or: subprocess: SP_ORCH  (shared, defined once at the top)
+    title:"ACCORDIA_FDC_DOWNTIME_ORCHESTRATOR_MERGE",
+    note:"One sentence on what this orchestrator does.",
+    steps: [
+      { n:"1", kind:"task",  title:"Stage the Historian output",
+        detail:"Reads &lt;code&gt;dev_v_dataexport_downtime_to_fdc&lt;/code&gt; into the merge input." },
+      { n:"2", kind:"check", title:"Row-count guard",
+        detail:"Stops the merge if the input is empty." },
+      { n:"3", kind:"fail",  title:"Raise and notify",
+        detail:"Routes to the shared Send notification task." }
+    ]
+  }
+}</pre>
+    <p><strong>kind</strong> sets the colour: <code>term</code>, <code>mile</code>, <code>wait</code>, <code>flow</code>, <code>store</code>, <code>gate</code>, <code>fail</code>.<br>
+    <strong>shape</strong> sets the outline: <code>box</code>, <code>term</code>, <code>dia</code>, <code>cyl</code>, <code>trap</code>, <code>proc</code>, <code>delay</code>.<br>
+    Sub-task <strong>kind</strong>: <code>task</code>, <code>check</code>, <code>fail</code>. Mark a notes card <code>warn:true</code> for a red left border.</p>
+    <p>Self-contained: no internet, no libraries, no build step.</p>
+  </details>
+</main>
+
+<aside id="panel" aria-hidden="true">
+  <div class="ah">
+    <button class="close" id="closeBtn" aria-label="Close">&times;</button>
+    <span class="tag" id="pTag"></span>
+    <h2 id="pTitle"></h2>
+    <p id="pNote"></p>
+  </div>
+  <div class="ab" id="pBody"></div>
+</aside>
+
+<script>
+(() => {
+  const NS = "http://www.w3.org/2000/svg";
+  const LBL = 182, COL = 214, BW = 190, BH = 92,
+        DW = 96, DH = 48, HDR = 44, ROW = 120, R = 10.5, CR = 15;
+
+  const C = { black:"#101418", orD:"#8A3A06", or:"#C05416", orL:"#FDF1E7", orP:"#F7CDA8",
+              red:"#B31220", redD:"#7A0C16", gray:"#5A6066", hair:"#C6CBCF",
+              lbl:"#F4F6F7", rowb:"#FAFBFC", white:"#ffffff" };
+
+  // kind -> [fill, stroke, strokeWidth, titleColour, subColour, invertedBadge]
+  const PAL = {
+    flow:  [C.white, C.gray, 1.2, C.black, C.gray, false],
+    store: [C.white, C.gray, 1.2, C.black, C.gray, false],
+    mile:  [C.orL,   C.or,   1.4, C.orD,   C.or,   false],
+    wait:  [C.white, C.or,   2.4, C.orD,   C.or,   false],
+    gate:  [C.white, C.or,   1.6, C.orD,   C.or,   false],
+    fail:  [C.black, C.black,1.4, C.white, C.hair, true ],
+    term:  [C.orD,   C.orD,  1.4, C.white, C.orP,  true ]
+  };
+
+  // Canvas text measurement; falls back to a character estimate if the 2D
+  // context is unavailable so the diagram degrades instead of failing.
+  let mc = null;
+  try { mc = document.createElement("canvas").getContext("2d"); } catch (e) { mc = null; }
+  const measure = (t, font) => {
+    if (mc) { mc.font = font; return mc.measureText(t).width; }
+    const px = parseFloat((font.match(/(\d+(?:\.\d+)?)px/) || [0, 12])[1]);
+    const mono = /mono|Menlo/i.test(font), bold = /^\s*(?:[5-9]00|bold)/.test(font);
+    return t.length * px * (mono ? 0.635 : (bold ? 0.56 : 0.53));
+  };
+
+  function wrap(text, max, font) {
+    if (measure(text, font) <= max) return [text];
+    const out = []; let rest = text;
+    while (rest) {
+      if (measure(rest, font) <= max) { out.push(rest); break; }
+      let cut = -1;
+      for (let i = 1; i < rest.length; i++) {
+        if (measure(rest.slice(0, i), font) > max) break;
+        if (" _-.".includes(rest[i - 1])) cut = i;
+      }
+      if (cut < 3) {
+        let i = 1;
+        while (i < rest.length && measure(rest.slice(0, i + 1), font) <= max) i++;
+        cut = i;
+      }
+      out.push(rest.slice(0, cut).trimEnd());
+      rest = rest.slice(cut).trimStart();
+    }
+    return out.length ? out : [text];
+  }
+
+  const esc = s => String(s).replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
+
+  // ── per-view geometry helpers
+  function ctxOf(view) {
+    const idx = {}; view.lanes.forEach((l, i) => idx[l.id] = i);
+    return {
+      idx,
+      bandH: HDR + view.lanes.length * ROW,
+      cx: c => LBL + c * COL + COL / 2,
+      cy: lane => HDR + idx[lane] * ROW + ROW / 2
+    };
+  }
+  // A node may span several columns (span:2). Width and centre follow from it.
+  const nodeW = n => n.shape === "dia" ? DW * 2 : BW + ((n.span || 1) - 1) * COL;
+  const halfW = n => nodeW(n) / 2;
+  const offX  = n => (((n.span || 1) - 1) * COL) / 2;
+
+  function shapeSVG(n, x, y) {
+    let [f, s, w] = PAL[n.kind];
+    if (n.changed) { s = C.red; w = Math.max(w, 2.3); }
+    const BW = nodeW(n);
+    const L = x - BW / 2, T = y - BH / 2;
+    const dash = n.pending ? ' stroke-dasharray="7 4"' : "";
+    const a = `fill="${f}" stroke="${s}" stroke-width="${w}"${dash} class="shp"`;
+    switch (n.shape) {
+      case "term":  return [`<rect x="${L}" y="${T}" width="${BW}" height="${BH}" rx="${BH/2}" ${a}/>`, 0];
+      case "dia":   return [`<polygon points="${x-DW},${y} ${x},${y-DH} ${x+DW},${y} ${x},${y+DH}" ${a}/>`, 0];
+      case "cyl": {
+        const e = 13;
+        return [`<path d="M${L} ${T+e} A${BW/2} ${e} 0 0 1 ${L+BW} ${T+e} L${L+BW} ${T+BH-e} A${BW/2} ${e} 0 0 1 ${L} ${T+BH-e} Z" ${a}/>`
+              + `<path d="M${L} ${T+e} A${BW/2} ${e} 0 0 0 ${L+BW} ${T+e}" fill="none" stroke="${s}" stroke-width="${w}"/>`, 7];
+      }
+      case "trap":  return [`<polygon points="${L},${T} ${L+BW},${T} ${L+BW-22},${T+BH} ${L+22},${T+BH}" ${a}/>`, 0];
+      case "proc":  return [`<rect x="${L}" y="${T}" width="${BW}" height="${BH}" rx="4" ${a}/>`
+                          + `<line x1="${L+11}" y1="${T}" x2="${L+11}" y2="${T+BH}" stroke="${s}" stroke-width="${w}"/>`
+                          + `<line x1="${L+BW-11}" y1="${T}" x2="${L+BW-11}" y2="${T+BH}" stroke="${s}" stroke-width="${w}"/>`, 0];
+      case "delay": return [`<path d="M${L} ${T} H${L+BW-BH/2} A${BH/2} ${BH/2} 0 0 1 ${L+BW-BH/2} ${T+BH} H${L} Z" ${a}/>`, 0];
+      default:      return [`<rect x="${L}" y="${T}" width="${BW}" height="${BH}" rx="6" ${a}/>`, 0];
+    }
+  }
+
+  function badge(x, y, txt, stroke, inv) {
+    if (!txt) return "";
+    const [f, t] = inv ? [C.white, stroke] : [stroke, C.white];
+    const ring = inv ? "" : `<circle cx="${x}" cy="${y}" r="${R+1.8}" fill="${C.white}"/>`;
+    return ring + `<circle cx="${x}" cy="${y}" r="${R}" fill="${f}" stroke="${stroke}" stroke-width="1.2"/>`
+      + `<text x="${x}" y="${y}" font-size="11" font-weight="700" fill="${t}" text-anchor="middle" dominant-baseline="central">${esc(txt)}</text>`;
+  }
+
+  function nodeSVG(n, G) {
+    const x = G.cx(n.col) + offX(n), y = G.cy(n.lane);
+    const BW = nodeW(n);
+    let [f, s, w, tc, sc, inv] = PAL[n.kind];
+    if (n.changed) { s = C.red; if (n.kind !== "fail" && n.kind !== "term") { tc = C.redD; sc = C.red; } }
+    const [body, dy] = shapeSVG(n, x, y);
+    const subs = n.sub || [];
+    const avail = n.shape === "dia" ? DW * 1.15 : (n.shape === "proc" ? BW - 34 : BW - 26);
+    const mono = /_/.test(n.title) || /^(USP|DEC-)/.test(n.title);
+    const tSize = mono ? 10.6 : 12.3;
+    const tf = `600 ${tSize}px ${mono ? "ui-monospace,Menlo,monospace" : '"Segoe UI",Arial,sans-serif'}`;
+    const small = subs.length >= 3;
+    const sSize = small ? 9 : 10.4, slh = small ? 11 : 12.5;
+    const sf = `${sSize}px "Segoe UI",Arial,sans-serif`;
+    const tl = wrap(n.title, avail, tf);
+    let sl = []; subs.forEach(t => sl = sl.concat(wrap(t, avail - 4, sf)));
+    const bh = tl.length * 14.5 + (sl.length ? 6 + sl.length * slh : 0);
+    const ty = y + dy - bh / 2 + 7.5;
+    const fam = mono ? ' font-family="ui-monospace,Menlo,monospace"' : "";
+    let o = body;
+    tl.forEach((ln, k) => o += `<text x="${x}" y="${(ty+k*14.5).toFixed(1)}" font-size="${tSize}" font-weight="600" fill="${tc}"${fam} text-anchor="middle" dominant-baseline="central">${esc(ln)}</text>`);
+    sl.forEach((ln, k) => o += `<text x="${x}" y="${(ty+tl.length*14.5+6+k*slh).toFixed(1)}" font-size="${sSize}" fill="${sc}" text-anchor="middle" dominant-baseline="central">${esc(ln)}</text>`);
+    o += badge(n.shape === "dia" ? x : x - BW / 2 + 22, y - (n.shape === "dia" ? DH : BH / 2), n.badge, s, inv);
+    // red corner tab: a shape cue for "affected", so it does not rely on hue alone
+    if (n.changed) {
+      const cxr = n.shape === "dia" ? x + DW - 26 : x + BW / 2 - 15;
+      const cyr = n.shape === "dia" ? y - 8 : y - BH / 2 + 8;
+      o += `<polygon points="${cxr},${cyr-7} ${cxr+8},${cyr+6} ${cxr-8},${cyr+6}" fill="${C.red}"/>`;
+    }
+    if (n.subprocess) o += `<circle cx="${x + BW/2 - 16}" cy="${y + BH/2 - 15}" r="9" fill="${C.or}"/>`
+      + `<text x="${x + BW/2 - 16}" y="${y + BH/2 - 15}" font-size="12" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">+</text>`;
+    return `<g class="node${n.subprocess ? " has-sub" : ""}" data-node="${n.id}">${o}</g>`;
+  }
+
+  const tagSVG = (x, y, t, col) => {
+    const w = 12 + measure(t, '10px "Segoe UI",Arial,sans-serif');
+    return `<rect x="${(x-w/2).toFixed(1)}" y="${y-8}" width="${w.toFixed(1)}" height="16" rx="8" fill="${C.white}"/>`
+      + `<text x="${x.toFixed(1)}" y="${y}" font-size="10" fill="${col}" text-anchor="middle" dominant-baseline="central">${esc(t)}</text>`;
+  };
+
+  function phaseSVG(view, p) {
+    const G = ctxOf(view), W = LBL + p.cols * COL, H = G.bandH;
+    const all = p.path.concat(p.extra || []), byId = {};
+    all.forEach(n => byId[n.id] = n);
+    let o = `<rect x="0" y="0" width="${W}" height="${H}" rx="8" fill="#fff" stroke="${C.black}" stroke-width="1.3"/>`
+      + `<path d="M8 0 h${W-16} a8,8 0 0 1 8,8 v${HDR-8} h-${W} v-${HDR-8} a8,8 0 0 1 8,-8 z" fill="${C.black}"/>`
+      + `<text x="22" y="${HDR/2}" font-size="15.5" font-weight="700" fill="#fff" dominant-baseline="central">${esc(p.title)}</text>`;
+
+    view.lanes.forEach((l, i) => {
+      const t = HDR + i * ROW, c = 1 + (LBL - 1) / 2;
+      o += `<rect x="1" y="${t}" width="${W-2}" height="${ROW}" fill="${i%2 ? C.rowb : "#fff"}"/>`
+        + `<rect x="1" y="${t}" width="${LBL-1}" height="${ROW}" fill="${C.lbl}"/>`
+        + `<line x1="1" y1="${t}" x2="${W-1}" y2="${t}" stroke="${C.hair}" stroke-width="0.9"/>`;
+      const nl = wrap(l.name, LBL - 26, '700 13px "Segoe UI",Arial,sans-serif');
+      const sl = wrap(l.sub, LBL - 22, '10.5px "Segoe UI",Arial,sans-serif');
+      const base = t + ROW/2 - (nl.length*15 + 4 + sl.length*12)/2 + 7.5;
+      nl.forEach((ln,k) => o += `<text x="${c}" y="${base+k*15}" font-size="13" font-weight="700" fill="${C.black}" text-anchor="middle" dominant-baseline="central">${esc(ln)}</text>`);
+      sl.forEach((ln,k) => o += `<text x="${c}" y="${base+nl.length*15+4+k*12}" font-size="10.5" fill="${C.gray}" text-anchor="middle" dominant-baseline="central">${esc(ln)}</text>`);
+    });
+    o += `<line x1="${LBL}" y1="${HDR}" x2="${LBL}" y2="${H}" stroke="${C.black}" stroke-width="1.1"/>`;
+
+    let labels = "";
+    p.path.forEach((a, i) => {
+      const b = p.path[i + 1]; if (!b) return;
+      const ax = G.cx(a.col) + offX(a), ay = G.cy(a.lane), bx = G.cx(b.col) + offX(b), by = G.cy(b.lane);
+      const x1 = ax + halfW(a), x2 = bx - halfW(b), xm = (x1 + x2) / 2;
+      o += `<path d="M${x1} ${ay} H${xm} V${by} H${x2-9}" fill="none" stroke="${C.gray}" stroke-width="1.7" marker-end="url(#ar-${view.id})"/>`;
+      if (a.next) labels += tagSVG(xm, Math.min(ay, by) - BH/2 - (i%2 ? 30 : 13), a.next,
+                                   a.next.startsWith("Yes") ? C.or : C.gray);
+    });
+    (p.feeds || []).forEach(f => {
+      const a = byId[f.from], b = byId[f.to];
+      const x = G.cx(a.col) + offX(a), y1 = G.cy(a.lane) + BH/2, y2 = G.cy(b.lane) - BH/2;
+      o += `<path d="M${x} ${y1} V${y2-9}" fill="none" stroke="${C.gray}" stroke-width="1.7" marker-end="url(#ar-${view.id})"/>`;
+      labels += tagSVG(x + 60, y1 + 2, f.label, C.gray);
+    });
+    (p.drops || []).forEach(d => {
+      const a = byId[d.from], b = byId[d.to];
+      const gx = G.cx(a.col) + offX(a), gy = G.cy(a.lane) + DH, tx = G.cx(b.col) + offX(b), ty = G.cy(b.lane);
+      const side = a.col > b.col ? -1 : 1, ex = tx - side * halfW(b);
+      o += `<path d="M${gx} ${gy} V${ty} H${ex + side*9}" fill="none" stroke="${C.black}" stroke-width="1.6" stroke-dasharray="7 4" marker-end="url(#arB-${view.id})"/>`;
+      labels += tagSVG(gx + 26, gy + 18, d.label, C.black);
+    });
+
+    all.forEach(n => o += nodeSVG(n, G));
+    o += labels;
+
+    const conn = (x, y, ch) => `<circle cx="${x}" cy="${y}" r="${CR}" fill="#fff" stroke="${C.or}" stroke-width="1.8"/>`
+      + `<text x="${x}" y="${y}" font-size="13" font-weight="700" fill="${C.or}" text-anchor="middle" dominant-baseline="central">${ch}</text>`;
+    if (p.exitConnector) {
+      const l = p.path[p.path.length - 1], y = G.cy(l.lane), x = G.cx(Math.min(l.col + (l.span||1), p.cols - 1));
+      o += `<path d="M${G.cx(l.col)+offX(l)+halfW(l)} ${y} H${x-CR-8}" fill="none" stroke="${C.gray}" stroke-width="1.7" marker-end="url(#ar-${view.id})"/>` + conn(x, y, p.exitConnector);
+    }
+    if (p.entryConnector) {
+      const f = p.path[0], y = G.cy(f.lane), x = G.cx(0);
+      o += conn(x, y, p.entryConnector)
+        + `<path d="M${x+CR} ${y} H${G.cx(f.col)+offX(f)-halfW(f)-9}" fill="none" stroke="${C.gray}" stroke-width="1.7" marker-end="url(#ar-${view.id})"/>`;
+    }
+
+    const defs = `<defs>
+      <marker id="ar-${view.id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="${C.gray}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>
+      <marker id="arB-${view.id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="${C.black}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    </defs>`;
+    return `<svg xmlns="${NS}" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family='"Segoe UI",Helvetica,Arial,sans-serif'>${defs}${o}</svg>`;
+  }
+
+  function legendHTML(items) {
+    return items.map(([k, l]) => {
+      if (k === "changed")
+        return `<span><i class="sw" style="border-color:${C.red};border-width:2.3px"></i>${esc(l)}</span>`;
+      if (k === "pending")
+        return `<span><i class="sw" style="border-color:${C.red};border-width:2.3px;border-style:dashed"></i>${esc(l)}</span>`;
+      if (k === "client")
+        return `<span><i class="sw" style="border-color:${C.red};border-width:2.3px;border-radius:9px;width:34px"></i>${esc(l)}</span>`;
+      const [f, s, w] = PAL[k];
+      return `<span><i class="sw" style="background:${f};border-color:${s};border-width:${w}px"></i>${esc(l)}</span>`;
+    }).join("");
+  }
+
+  // ── build the page
+  document.getElementById("ttl").textContent = DIAGRAM.title;
+  document.getElementById("tabs").innerHTML = DIAGRAM.views.map((v, i) =>
+    `<button class="tab" role="tab" data-view="${v.id}" aria-selected="${i === 0}">${esc(v.tab)}</button>`).join("");
+  document.getElementById("views").innerHTML = DIAGRAM.views.map((v, i) => `
+    <section class="view${i === 0 ? " on" : ""}" data-view="${v.id}">
+      <div class="vsub">${v.subtitle.map(t => `<p>${esc(t)}</p>`).join("")}</div>
+      <div class="bar">
+        <button class="z bFit"  aria-pressed="true">Fit to width</button>
+        <button class="z bReal" aria-pressed="false">Actual size</button>
+        <span class="hint"></span>
+      </div>
+      ${v.phases.map(p => `<div class="phase">${phaseSVG(v, p)}</div>`).join("")}
+      <div class="legend">${legendHTML(v.legend)}</div>
+      <div class="notes">${v.notes.map(n =>
+        `<div class="card${n.warn ? " warn" : ""}"><h3>${esc(n.head)}</h3><ul>${n.items.map(i => `<li>${i}</li>`).join("")}</ul></div>`).join("")}</div>
+    </section>`).join("");
+
+  // ── tabs
+  document.getElementById("tabs").addEventListener("click", e => {
+    const b = e.target.closest(".tab"); if (!b) return;
+    document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t === b));
+    document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.dataset.view === b.dataset.view));
+  });
+
+  // ── zoom (one control per view, kept in sync through the body class)
+  const setFit = on => {
+    document.body.classList.toggle("fit", on);
+    document.querySelectorAll(".bFit").forEach(b => b.setAttribute("aria-pressed", on));
+    document.querySelectorAll(".bReal").forEach(b => b.setAttribute("aria-pressed", !on));
+    document.querySelectorAll(".hint").forEach(h => h.textContent = on
+      ? "Scaled to window. Switch to actual size to read labels."
+      : "Actual size. Scroll horizontally.");
+  };
+  document.addEventListener("click", e => {
+    if (e.target.classList.contains("bFit")) setFit(true);
+    if (e.target.classList.contains("bReal")) setFit(false);
+  });
+  setFit(true);
+
+  // ── side panel
+  const nodes = {};
+  DIAGRAM.views.forEach(v => v.phases.forEach(p => p.path.concat(p.extra || []).forEach(n => nodes[n.id] = n)));
+  const panel = document.getElementById("panel");
+  const close = () => { panel.classList.remove("open"); panel.setAttribute("aria-hidden", "true"); };
+
+  document.getElementById("views").addEventListener("click", e => {
+    const g = e.target.closest(".node"); if (!g) return;
+    const n = nodes[g.dataset.node]; if (!n || !n.subprocess) return;
+    const sp = n.subprocess;
+    document.getElementById("pTag").textContent = "Step " + n.badge + " · sub-tasks";
+    document.getElementById("pTitle").textContent = sp.title || n.title;
+    document.getElementById("pNote").textContent = sp.note || "";
+    document.getElementById("pBody").innerHTML = (sp.steps && sp.steps.length)
+      ? sp.steps.map(s => `<div class="step ${s.kind || "task"}"><div class="n">${esc(s.n)}</div>`
+          + `<h4>${esc(s.title)}</h4><p>${s.detail || ""}</p></div>`).join("")
+      : `<div class="empty"><strong>No sub-tasks documented yet.</strong><br><br>`
+        + `Add them to <code>subprocess.steps</code> for step ${esc(n.badge)} in the data block at the top of this file. A commented template is there.<br><br>`
+        + `Same for the other orchestrators: add <code>shape:"proc"</code> and a <code>subprocess</code> object.</div>`;
+    panel.classList.add("open"); panel.setAttribute("aria-hidden", "false");
+  });
+  document.getElementById("closeBtn").onclick = close;
+  document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+
+
+
+
+-- ====================================================================================================================================================================================
+-- Author										Ticket							Description
+-- Jennifer Larios      					Downtime Overhaul			DELETE records with dtstatus=-3 and lastupdate older than max last_update
+
+-- ====================================================================================================================================================================================
+CREATE   PROCEDURE [dbo].[Usp_Delete_OldDwntmRecords]
+       @del_batch        int = 100000  
+
+WITH EXECUTE AS OWNER
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    DECLARE @cutoff           datetime2(0)      
+   
+    DECLARE @t_start       datetime2(7) = SYSDATETIME();
+    DECLARE @t_loop        datetime2(7);
+    DECLARE @aff           int;
+    DECLARE @done_rows     bigint = 0;
+  
+
+--Assign the cutoff value
+  SELECT @cutoff =max(VM.LAST_UPDATE)
+  FROM dbo.FDC_VISIT_METRIC vm
+  WHERE vm.status  = 0 and vm.dtstatus    = -3 
+   AND EXISTS (
+      SELECT 1
+      FROM dbo.FDC_METRIC m
+      WHERE m.METRIC_UID = vm.METRIC_UID
+        AND m.METRIC_CODE IN ('MTR052','MTR085','MTR051')
+   );
+
+
+
+---Delete step
+
+DECLARE @del_total BIGINT;
+
+SELECT @del_total = COUNT_BIG(*) 
+FROM dbo.FDC_VISIT_METRIC vm
+JOIN dbo.FDC_METRIC m  ON m.METRIC_UID = vm.METRIC_UID
+WHERE m.METRIC_CODE IN ('MTR052','MTR085','MTR051') 
+AND vm.status  = 0  AND  vm.dtstatus    = -3 AND vm.LAST_UPDATE < @cutoff ;
+
+
+SELECT @del_total AS rows_to_delete;
+
+IF ISNULL(@del_total,0) > 0
+BEGIN
+        DECLARE @del_done bigint = 0;
+        DECLARE @t0_del   datetime2(7) = SYSDATETIME();
+
+    WHILE 1=1
+    BEGIN
+        SET @t_loop = SYSDATETIME();
+	  BEGIN TRY
+        BEGIN TRAN;
+
+        ;WITH cte AS (
+        SELECT TOP (@del_batch)
+               vm.VISIT_METRIC_UID,
+               vm.VISIT_METRIC_DATE
+        FROM dbo.FDC_VISIT_METRIC vm 
+        JOIN dbo.FDC_METRIC m  ON m.METRIC_UID = vm.METRIC_UID
+        WHERE m.METRIC_CODE IN ('MTR052','MTR085','MTR051') AND vm.status  = 0  AND vm.dtstatus = -3 AND vm.LAST_UPDATE < @cutoff 
+        ORDER BY vm.VISIT_METRIC_UID, vm.VISIT_METRIC_DATE     
+    )
+    DELETE vm
+    FROM dbo.FDC_VISIT_METRIC vm
+    JOIN cte
+      ON  cte.VISIT_METRIC_UID  = vm.VISIT_METRIC_UID
+      AND cte.VISIT_METRIC_DATE = vm.VISIT_METRIC_DATE
+    OPTION (RECOMPILE);
+
+        SET @aff = @@ROWCOUNT;
+               COMMIT;
+            END TRY
+            BEGIN CATCH
+                IF XACT_STATE() <> 0 ROLLBACK;
+                THROW;
+            END CATCH;
+
+            SET @del_done += @aff;
+
+    SELECT
+              SYSDATETIME() AS now_local,
+              @aff          AS rows_deleted_in_batch,
+              @del_done     AS rows_deleted_total,
+              @del_total    AS rows_to_delete_total,
+              CAST(100.0*@del_done/NULLIF(@del_total,0) AS decimal(6,2)) AS pct_complete,
+              DATEDIFF(SECOND, @t_loop, SYSDATETIME()) AS seconds_last_batch,
+              DATEDIFF(SECOND, @t0_del, SYSDATETIME()) AS seconds_elapsed_total;
+
+
+        IF (@aff < @del_batch) BREAK;
+    END
+
+       SELECT 'DELETE_FIN' AS status,
+               @del_done    AS rows_deleted_total,
+               @del_total   AS rows_to_delete_total,
+               DATEDIFF(SECOND, @t0_del, SYSDATETIME()) AS seconds_total_elapsed;
+    END
+    ELSE
+    BEGIN
+        SELECT 'DELETE_SKIP' AS status, 'No rows with dtstatus -3 older than cut off date' AS note, @cutoff  AS cutoff_date;
+    END
+END

@@ -1,0 +1,295 @@
+version: 2
+
+sources:    
+  - name: fdc_app_raw_merge
+    database: $(fdc_dwntm_merge_database)
+    schema: $(fdc_dwntm_merge_schema)
+    tables:
+      - name: visit_metric
+        tags: [downtime_merge, check_fdc_snowflake_mirrors_transactional]
+        columns:
+            - name: VISIT_METRIC_UID
+              tests:
+                - not_empty
+
+      - name: visit_asset
+        tags: [downtime_merge, check_fdc_snowflake_mirrors_transactional]
+        columns:
+            - name: VISIT_ASSET_UID
+              tests:
+                - not_empty      
+      - name: asset
+        tags: [downtime_merge, check_fdc_snowflake_mirrors_master_1]
+        columns:
+            - name: ASSET_UID
+              tests:
+                - not_empty
+      - name: asset_class
+        tags: [downtime_merge, check_fdc_snowflake_mirrors_master_1]
+        columns:
+            - name: ASSET_CLASS_UID
+              tests:
+                - not_empty
+      - name: visit_site
+        tags: [downtime_merge, check_fdc_snowflake_mirrors_transactional]
+        columns:
+            - name: VISIT_SITE_UID
+              tests:
+                - not_empty
+      - name: metric
+        tags: [downtime_merge, check_fdc_snowflake_mirrors_master_1]
+        columns:
+            - name: METRIC_UID
+              tests:
+                - not_empty
+      - name: route
+        tags: [downtime_merge, check_fdc_snowflake_mirrors_master_1]
+        columns:
+            - name: ROUTE_UID
+              tests:
+                - not_empty
+      - name: site
+        tags: [downtime_merge, check_fdc_snowflake_mirrors_master_1]
+        columns:
+            - name: SITE_UID
+              tests:
+                - not_empty
+      - name: operator
+        tags: [downtime_merge, check_fdc_snowflake_mirrors_master_1]
+        columns:
+            - name: OPERATOR_UID
+              tests:
+                - not_empty
+      - name: asset_type
+        tags: [downtime_merge, check_fdc_snowflake_mirrors_master_1]
+        columns:
+            - name: ASSET_TYPE_UID
+              tests:
+                - not_empty
+      - name: metric_domain
+        tags: [downtime_merge, check_fdc_snowflake_mirrors_master_2]
+        columns:
+            - name: METRIC_DOMAIN_UID
+              tests:
+                - not_empty
+      - name: fdc_downtime
+        tags: [downtime_merge, check_fdc_snowflake_mirrors_transactional]
+        columns:
+            - name: downtime_UID
+              tests:
+                - not_empty
+      - name: downtime_master
+      
+      - name: downtime_exceptions
+
+      - name: answer_option
+        tags: [check_fdc_snowflake_mirrors_master_2]
+        columns:
+            - name: answer_option_UID
+              tests:
+                - not_empty
+      - name: ASSET_CONFIGURATION
+        tags: [check_fdc_snowflake_mirrors_master_1]
+        columns:
+            - name: ASSET_CONFIGURATION_UID
+              tests:
+                - not_empty
+      - name: ASSET_FORM_ANSWER
+        tags: [check_fdc_snowflake_mirrors_transactional]
+        columns:
+            - name: ASSET_FORM_ANSWER_UID
+              tests:
+                - not_empty
+
+      - name: ASSET_FORM_HEADER
+        tags: [check_fdc_snowflake_mirrors_transactional]
+        columns:
+          - name: ASSET_FORM_HEADER_UID
+            tests:
+              - not_empty
+      - name: ASSET_HIERARCHY
+        tags: [check_fdc_snowflake_mirrors_master_1]
+        columns:
+          - name: ASSET_HIERARCHY_UID
+            tests:
+              - not_empty
+      - name: ASSET_NOTES
+        tags: [check_fdc_snowflake_mirrors_master_1]
+        columns:
+          - name: ASSET_NOTES_UID
+            tests:
+              - not_empty
+      - name: ASSET_PROPERTY
+        tags: [check_fdc_snowflake_mirrors_master_1]
+        columns:
+          - name: ASSET_PROPERTY_UID
+            tests:
+              - not_empty
+      - name: ASSET_TICKET
+        tags: [check_fdc_snowflake_mirrors_transactional]
+        columns:
+          - name: ASSET_TICKET_UID
+            tests:
+              - not_empty
+
+      - name: ASSET_TYPE_AUDIT
+        tags: [check_fdc_snowflake_mirrors_master_4]
+        columns:
+          - name: ASSET_TYPE_AUDIT_UID
+            tests:
+              - not_empty
+      - name: ASSET_TYPE_COEFF
+        tags: [check_fdc_snowflake_mirrors_master_3]
+        columns:
+          - name: COEFF_UID
+            tests:
+              - not_empty
+      - name: ASSET_TYPE_DOMAIN
+        tags: [check_fdc_snowflake_mirrors_master_2]
+        columns:
+          - name: ASSET_TYPE_DOMAIN_UID
+            tests:
+              - not_empty
+      - name: ASSET_TYPE_METRIC
+        tags: [check_fdc_snowflake_mirrors_master_1]
+        columns:
+          - name: ASSET_TYPE_METRIC_UID
+            tests:
+              - not_empty
+      - name: BUSASSOC_TYPE
+        tags: [check_fdc_snowflake_mirrors_master_2]
+        columns:
+          - name: BUSASSOC_TYPE_UID
+            tests:
+              - not_empty
+      - name: BUSINESS_ASSOCIATE
+        tags: [check_fdc_snowflake_mirrors_master_2]
+        columns:
+          - name: BUSASSOC_UID
+            tests:
+              - not_empty
+      - name: CORP_LEVEL
+        tags: [check_fdc_snowflake_mirrors_master_2]
+        columns:
+          - name: CORP_LEVEL_UID
+            tests:
+              - not_empty
+      - name: CORP_LEVEL_ASSET
+        tags: [check_fdc_snowflake_mirrors_master_2]
+        columns:
+          - name: PARENT_UID
+            tests:
+              - not_empty
+      - name: DOMLOC_BUSASSOC
+        tags: [check_fdc_snowflake_mirrors_master_2]
+        columns:
+          - name: DOMLOC_BUSASSOC_UID
+            tests:
+              - not_empty
+
+
+      - name: FLUIDSHIPMENT_ASSOC
+        tags: [check_fdc_snowflake_mirrors_master_2]
+        columns:
+          - name: FLUIDSHIP_ASSOC_UID
+            tests:
+              - not_empty
+      - name: FORM
+        tags: [check_fdc_snowflake_mirrors_master_2]
+        columns:
+          - name: FORM_UID
+            tests:
+              - not_empty
+      - name: FORM_ANSWER_VALUES
+        tags: [check_fdc_snowflake_mirrors_transactional]
+        columns:
+          - name: FORM_ANSWER_VALUES_UID
+            tests:
+              - not_empty
+      - name: FORM_QUESTION
+        tags: [check_fdc_snowflake_mirrors_master_2]
+        columns:
+          - name: FORM_QUESTION_UID
+            tests:
+              - not_empty
+      - name: FORM_SECTION
+        tags: [check_fdc_snowflake_mirrors_master_2]
+        columns:
+          - name: FORM_SECTION_UID
+            tests:
+              - not_empty
+
+      - name: METRIC_TYPE
+        tags: [check_fdc_snowflake_mirrors_master_2]
+        columns:
+          - name: METRIC_TYPE_ID
+            tests:
+              - not_empty
+
+
+
+      - name: OPERATOR_FOREMAN_VIEW
+        tags: [check_fdc_snowflake_mirrors_master_3]
+        columns:
+          - name: OPERATOR_UID
+            tests:
+              - not_empty
+
+      - name: OPERATOR_MANAGER_VIEW
+        tags: [check_fdc_snowflake_mirrors_master_3]
+        columns:
+          - name: OPERATOR_UID
+            tests:
+              - not_empty
+
+
+      - name: REASON
+        tags: [check_fdc_snowflake_mirrors_master_2]
+        columns:
+          - name: REASON_UID
+            tests:
+              - not_empty
+      - name: ROLE
+        tags: [check_fdc_snowflake_mirrors_master_4]
+        columns:
+          - name: ROLEUID
+            tests:
+              - not_empty
+      - name: ROLE_OPERATOR
+        tags: [check_fdc_snowflake_mirrors_master_4]
+        columns:
+          - name: ROLEOPERATORUID
+            tests:
+              - not_empty
+
+
+
+
+      - name: SITE_FORM_ANSWER
+        tags: [check_fdc_snowflake_mirrors_transactional]
+        columns:
+          - name: SITE_FORM_ANSWER_UID
+            tests:
+              - not_empty
+      - name: SITE_FORM_HEADER
+        tags: [check_fdc_snowflake_mirrors_transactional]
+        columns:
+          - name: SITE_FORM_HEADER_UID
+            tests:
+              - not_empty
+
+
+
+      - name: VISIT_REASON
+        tags: [check_fdc_snowflake_mirrors_transactional]
+        columns:
+          - name: VISIT_REASON_UID
+            tests:
+              - not_empty
+
+      - name: VISIT_TICKET
+        tags: [check_fdc_snowflake_mirrors_transactional]
+        columns:
+          - name: VISIT_TICKET_UID
+            tests:
+              - not_empty
