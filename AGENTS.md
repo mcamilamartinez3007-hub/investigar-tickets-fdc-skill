@@ -39,3 +39,16 @@ Maintain an operational skill for FDC investigations. SKILL.md defines runtime b
 ## Operations
 
 This repository does not authorize writing to Jira, executing SQL, deploying, promoting, or modifying infrastructure. Every external action requires a separate explicit request from the user.
+
+## Knowledge Hub maintenance
+
+- Apply references/continuous-learning.md before creating or promoting an entry.
+- Validate every entry against schemas/knowledge-entry.schema.json.
+- Run scripts/validate_knowledge.py before proposing a knowledge commit.
+- Prefer updating an existing entry when the new evidence reinforces or narrows it.
+- Store unresolved candidates under knowledge/candidates/.
+- Store verified facts and contracts under knowledge/verified/.
+- Store proven troubleshooting or remediation patterns under knowledge/operational/.
+- Move replaced knowledge to knowledge/superseded/ without destroying provenance.
+- Never promote directly from a Jira status, an isolated comment, memory, or an unexecuted recommendation.
+- Use a branch or pull request for automated ingestion. Do not let an ingestion workflow push unreviewed knowledge directly to main.

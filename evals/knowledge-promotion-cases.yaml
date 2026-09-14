@@ -1,0 +1,113 @@
+version: 1
+skill: investigar-tickets-fdc
+cases:
+  - id: jira-comment-is-not-proof
+    input:
+      source: "A Jira comment says the fix was deployed and works."
+    expected:
+      lifecycle_status: candidate
+      must_request_or_find:
+        - deployment evidence
+        - environment
+        - controlled validation result
+      must_not:
+        - mark verified
+        - mark operational
+  - id: exact-semantic-duplicate
+    input:
+      existing_claim: "FDC_DOWNTIME merges by DOWNTIME_UID."
+      candidate_claim: "The merge key used by FDC_DOWNTIME is DOWNTIME_UID."
+      overlapping_scope: true
+    expected:
+      novelty_relationship: DUPLICATE
+      action: UPDATE_EXISTING_OR_NO_CHANGE
+      new_entry: false
+  - id: reinforcing-runtime-evidence
+    input:
+      existing_status: verified
+      same_claim_and_scope: true
+      new_evidence_class: E1_RUNTIME
+    expected:
+      novelty_relationship: REINFORCES
+      new_entry: false
+      preserve_existing_knowledge_id: true
+  - id: scope-extension
+    input:
+      same_mechanism: true
+      existing_environment: UAT
+      new_environment: PROD
+      prod_evidence_present: true
+    expected:
+      novelty_relationship: EXTENDS
+      require_separate_environment_scope: true
+  - id: unresolved-contradiction
+    input:
+      current_contract: "Enertia is authoritative."
+      new_observation: "FDC overwrote Enertia for this case."
+      overlapping_scope: true
+      implementation_version_unknown: true
+    expected:
+      lifecycle_status: conflict_pending
+      action: RECORD_CONTRADICTION
+      automatic_remediation_allowed: false
+  - id: engineer-confirmation-incomplete
+    input:
+      statement: "The engineer confirmed it."
+      environment: ""
+      test_case: ""
+      artifact: ""
+    expected:
+      lifecycle_status: candidate
+      evidence_gate: fail
+  - id: engineer-confirmation-complete
+    input:
+      role: "FDC application engineer"
+      environment: UAT
+      test_case: "reason-only edit golden sample"
+      observed_result: "new UID existed before Accordia"
+      artifact_present: true
+      date_present: true
+    expected:
+      evidence_class: E7_ENGINEER_CONFIRMATION
+      may_support_verified: true
+      still_requires_scope_review: true
+  - id: code-only-fix
+    input:
+      code_review_passed: true
+      controlled_validation_run: false
+    expected:
+      maximum_lifecycle_status: verified
+      operational_promotion: fail
+  - id: validated-operational-fix
+    input:
+      mechanism_verified: true
+      controlled_validation_passed: true
+      intended_environment: UAT
+      retry_passed: true
+      regression_passed: true
+      rollback_defined: true
+      unresolved_safety_risk: false
+    expected:
+      lifecycle_status: operational
+  - id: failed-known-playbook
+    input:
+      existing_status: operational
+      new_controlled_validation_result: failed
+      overlapping_scope: true
+    expected:
+      action: RECORD_CONTRADICTION
+      automatic_reuse_blocked: true
+      revalidation_required: true
+  - id: low-utility-fact
+    input:
+      evidence_valid: true
+      changes_future_decision: false
+      utility_score: 2
+    expected:
+      action: NO_KNOWLEDGE_UPDATE
+  - id: secret-detected
+    input:
+      candidate_contains_token: true
+    expected:
+      persistence_allowed: false
+      action: SANITIZE_OR_REJECT

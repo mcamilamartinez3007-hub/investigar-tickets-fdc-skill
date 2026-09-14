@@ -1,37 +1,50 @@
 # Source material manifest
 
-## Repository state at version 1.0.1
+## Ingestion state
 
-The repository initially contained only README.md. Technical files discussed during earlier investigations were not physically available when the first skill version was built.
+Commit 8cb5deb9b415509cfbf9c48190d5b680f005f455 added 30 original text-readable technical files under source-material/.
 
-Therefore:
+Inventory:
 
-- Their content was not invented or reconstructed.
-- Consolidated findings were documented as derived knowledge.
-- Line-level traceability must be revalidated after original sources are added.
-- source-material/ is reserved for unchanged originals.
+- 18 SQL files;
+- 5 JSON files;
+- 3 Python files;
+- 2 text files;
+- 1 YAML file;
+- 1 HTML process map.
 
-## Mentioned but not yet incorporated sources
+All 30 files were readable through the repository connection. No obvious private-key, password-assignment, API-key, token-assignment, or AWS access-key patterns were detected by the initial heuristic scan. This is not a substitute for organizational secret scanning.
 
-Known source categories include:
+## Validation findings
 
-- downtime-process-maps.html;
-- fdc_downtime_mrg.json;
-- Usp_Delete_OldDwntmRecords;
-- Usp_Inactivate_OldDwntmRecords;
-- Downtime stg_pre_upsert models;
-- DOWNTIME_MASTER and DOWNTIME_EXCEPTIONS models;
-- orchestration manifests and jobs;
-- historical handoffs for FDCSD-428, FDCSD-458, and FDCSD-459;
-- AssetMetricsViewModel code related to versioning.
+- source-material/dec_fdc_tsk_raw_downtime_master_truncate.json is not valid JSON because the tags array contains the unexpected character in: "SP",x.
+- source-material/stg_fdc_stg_dwntime_merge .sql and source-material/stg_fdc_stg_dwntime_merge.sql are different versions, not identical duplicates.
+- The version without the extra space contains DTCOMMENT handling and additional VISIT_ASSET_UID and VISIT_ASSET_DATE output.
+- Preserve both versions until active-code or deployment evidence identifies their exact chronology and status.
+- Original files must not be silently corrected. Store a corrected or active version as a separate sourced artifact with provenance.
 
-This list does not claim exact filenames or complete contents beyond the consolidated evidence.
+## Current coverage
+
+The uploaded set strongly supports:
+
+- Downtime Master;
+- Downtime Exceptions;
+- FDC Downtime reverse ETL;
+- IMP_PDMASDOWNTIME;
+- related Visit Site, Visit Asset, and Visit Metric processing;
+- overhaul stored procedures;
+- Airflow/dbt orchestration;
+- Downtime-related Historian publication.
+
+It does not yet provide equally deep source coverage for Routes, Users, Mobile Sync, Carry Forward, general Historian pipelines, or every FDC API and client path. The skill must learn those domains from future Jira investigations and engineer-validated evidence through the controlled lifecycle.
 
 ## Ingestion procedure
 
-1. Store files under source-material/<domain>/ without modification.
-2. Add a SHA or commit reference.
-3. Update this inventory.
-4. Link derived facts.
-5. Revalidate known-cases.md.
-6. Run evals/evaluation-cases.yaml.
+1. Preserve the original under source-material/<domain>/.
+2. Record commit SHA, original path, source system, environment, and date.
+3. Scan for secrets and unnecessary PII.
+4. Parse or validate the file format without altering the original.
+5. Extract atomic knowledge candidates.
+6. Apply novelty, evidence, conflict, scope, utility, and safety gates.
+7. Update the Knowledge Hub through a reviewed branch or pull request.
+8. Re-run affected evaluations.

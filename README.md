@@ -42,3 +42,13 @@ The skill analyzes and recommends. It does not write to Jira, execute SQL, promo
 ## Status
 
 Version 1.0.1. The initial knowledge base contains consolidated findings. Original technical files should be added to source-material/ to improve line-level traceability without rewriting the methodology.
+
+## Continuous learning
+
+Every completed investigation produces a knowledge-harvest decision. Reusable findings enter a controlled lifecycle:
+
+candidate → provisional → verified → operational
+
+Candidates are deduplicated and checked for contradictions before promotion. Jira content, engineer feedback, runtime data, code, and validation results carry different evidentiary weight. Automated ingestion may prepare a branch or pull request, but it must not silently publish unreviewed knowledge to main.
+
+See references/continuous-learning.md and schemas/knowledge-entry.schema.json.

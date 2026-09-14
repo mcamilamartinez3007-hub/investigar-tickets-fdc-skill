@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0 - 2026-09-14
+
+- Added a continuous-learning lifecycle for knowledge discovered through Jira and engineer-led validation.
+- Added novelty, evidence, scope, conflict, safety, and operational-effectiveness gates.
+- Added a structured Knowledge Hub with candidate, verified, operational, and superseded states.
+- Added a machine-readable knowledge schema and a dependency-free validator.
+- Added adversarial ingestion evaluations covering duplicates, contradictions, unsupported Jira claims, and failed fixes.
+- Updated the source manifest to reflect the 30 ingested Downtime files and their validation findings.
+
+
 ## 1.0.1 - 2026-09-14
 
 - Converted all internal skill instructions, references, templates, and metadata to English.

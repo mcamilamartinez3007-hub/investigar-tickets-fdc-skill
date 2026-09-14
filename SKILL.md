@@ -85,6 +85,7 @@ Read only the references needed for the case:
 - Environments, permissions, and escalation: references/environment-and-permissions.md
 - Sources of truth: references/source-of-truth-registry.md
 - Knowledge validity and updates: references/knowledge-governance.md
+- Continuous learning and promotion gates: references/continuous-learning.md
 - Client communication: references/client-collaboration.md
 - Available or pending technical sources: references/source-material-manifest.md
 - Consolidated original requirements: references/fdc-consolidated-knowledge.md
@@ -160,3 +161,35 @@ Use assets/investigation-template.md. Use assets/client-update-template.md for e
 - Keep facts, inferences, and unknowns visibly separate.
 - Prefer an actionable conclusion over an unnecessarily long investigation diary.
 - Never dress a hypothesis in a tie and call it root cause.
+
+## Continuous-learning protocol
+
+At the end of every material investigation, perform a knowledge harvest before closing the response:
+
+1. Extract only reusable facts, contracts, failure mechanisms, validation patterns, ownership rules, and proven remediations.
+2. Compare each candidate with the Knowledge Hub by stable fingerprint, affected objects, mechanism, scope, and meaning.
+3. Classify the relationship as NEW, DUPLICATE, REINFORCES, EXTENDS, CONTRADICTS, or SUPERSEDES.
+4. Run the evidence, scope, safety, and utility gates defined in references/continuous-learning.md.
+5. Keep unsupported material as a candidate. Never expose it as current truth.
+6. Promote a fact to VERIFIED only when its required evidence gate passes.
+7. Promote a remediation to OPERATIONAL only after a successful environment-specific validation and regression evidence.
+8. Record contradictions without overwriting either side. Resolve them through a targeted validation.
+9. Generate a Knowledge Update Proposal in the investigation output whenever reusable knowledge was found.
+10. Persist or promote knowledge only under the repository-write authorization defined for the current session or workflow.
+
+Do not create a new entry when an existing one can be reinforced or extended. Do not optimize for the number of entries. Optimize for future diagnostic value, provenance, and bounded correctness.
+
+### Required harvest output
+
+- CANDIDATE KNOWLEDGE
+- NOVELTY CLASSIFICATION
+- EXISTING KNOWLEDGE MATCH
+- EVIDENCE GRADE
+- VALIDITY SCOPE
+- CONFLICT STATUS
+- REUSE VALUE
+- PROMOTION DECISION
+- MISSING VALIDATION
+- PROPOSED KNOWLEDGE CHANGE
+
+If no reusable knowledge was produced, state NO KNOWLEDGE UPDATE and explain why.

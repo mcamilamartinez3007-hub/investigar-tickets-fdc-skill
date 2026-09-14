@@ -1,14 +1,88 @@
-source: ""
-ticket: ""
-date: ""
-environment: ""
+knowledge_id: "FDC-KNOWLEDGE-0000"
+title: ""
 domain: ""
-evidence_type: ""
-confidence: ""
-validity: unverified
-supersedes: []
-related_tickets: []
-requires_revalidation: true
+component: ""
+knowledge_type: "FAILURE_MECHANISM"
+lifecycle_status: "candidate"
 claim: ""
-evidence: ""
-limitations: ""
+fingerprint: ""
+source_tickets: []
+source_references:
+  - source_type: ""
+    reference: ""
+    commit_sha: ""
+    lines_or_section: ""
+date_observed: ""
+environment: "unknown"
+version_scope:
+  code_ref: ""
+  deployment_ref: ""
+  valid_from: ""
+  valid_to: ""
+affected_systems: []
+affected_objects: []
+evidence:
+  - evidence_id: ""
+    evidence_class: "E10_MEMORY"
+    observation: ""
+    artifact_reference: ""
+    collected_at: ""
+    environment: "unknown"
+    supports_or_refutes: "supports"
+confidence: "low"
+validity: "unverified"
+applicability:
+  preconditions: []
+  included_cases: []
+  excluded_cases: []
+limitations: []
+novelty:
+  relationship: "NEW"
+  matched_knowledge_ids: []
+  rationale: ""
+conflict:
+  status: "none"
+  conflicting_knowledge_ids: []
+  resolution: ""
+validation:
+  status: "not_run"
+  test_case: ""
+  baseline: ""
+  action: ""
+  expected: ""
+  actual: ""
+  result: ""
+  validated_by_role: ""
+  validated_at: ""
+reuse:
+  future_decision: ""
+  diagnostic_action: ""
+  remediation_action: ""
+  recurrence_score: 0
+  discrimination_score: 0
+  actionability_score: 0
+  blast_radius_score: 0
+  transferability_score: 0
+promotion:
+  decision: "KEEP_CANDIDATE"
+  gate_results:
+    provenance: false
+    novelty: false
+    evidence: false
+    scope: false
+    conflict: false
+    utility: false
+    safety: false
+    effectiveness: false
+  missing_requirements: []
+security_review:
+  secrets_detected: false
+  pii_removed: true
+  notes: ""
+related_knowledge_ids: []
+supersedes: []
+superseded_by: []
+revalidation:
+  required: true
+  trigger: ""
+  review_after: ""
