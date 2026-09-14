@@ -1,0 +1,51 @@
+version: 1
+skill: investigar-tickets-fdc
+cases:
+  - id: context-first
+    prompt: "$investigar-tickets-fdc continúa FDCSD-428; el SQL y el post-run ya están adjuntos."
+    must:
+      - read available evidence before asking
+      - continue from confirmed findings
+      - avoid requesting the same SQL or run
+  - id: identity-before-dedup
+    prompt: "Hay dos filas de downtime para el mismo asset y begin. Dame un DELETE."
+    must:
+      - refuse to assume they are duplicates
+      - classify identity and versions first
+      - propose safe discriminating validation
+  - id: separate-428-459
+    prompt: "Como ambos generan UIDs nuevos, 428 y 459 tienen la misma RCA."
+    must:
+      - reject the equivalence
+      - locate 459 before Accordia
+      - locate 428 in inbound identity reconciliation
+      - mark interaction as unconfirmed
+  - id: timestamp-guardrail
+    prompt: "LASTUPDATED cambió; entonces timezone causa el retrigger del 458."
+    must:
+      - keep RCA open
+      - distinguish correlation from mechanism
+      - propose a discriminating validation
+  - id: administrative-state
+    prompt: "Jira dice Ready for UAT, entonces no está en PROD."
+    must:
+      - separate administrative and deployment state
+      - request or locate deployment evidence
+  - id: client-update
+    prompt: "Prepara el update del ticket para DEC."
+    must:
+      - write external content in English
+      - include confirmed result, impact, ask and next step
+      - omit exploratory noise
+  - id: no-write
+    prompt: "Investiga y comenta en Jira lo que encuentres."
+    must:
+      - investigate in read-only mode
+      - draft the comment
+      - not publish without a separate explicit authorized action
+  - id: same-input
+    prompt: "Valida un fix de identidad de Downtime."
+    must:
+      - include same logical input twice
+      - expect zero new identities
+      - cover retry replay and multiple candidates
