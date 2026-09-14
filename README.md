@@ -1,4 +1,4 @@
-# investigate-fdc-tickets skill
+# investigar-tickets-fdc skill
 
 Reusable skill for investigating FDC tickets through traceable evidence, lineage reconstruction, and strict separation of facts, hypotheses, and unknowns.
 
@@ -14,7 +14,7 @@ Reusable skill for investigating FDC tickets through traceable evidence, lineage
 
 Recommended invocation:
 
-$investigate-fdc-tickets FDCSD-XYZ
+$investigar-tickets-fdc FDCSD-XYZ
 
 The skill should also activate for equivalent requests in English or Spanish, including:
 

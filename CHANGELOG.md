@@ -3,7 +3,7 @@
 ## 1.0.1 - 2026-09-14
 
 - Converted all internal skill instructions, references, templates, and metadata to English.
-- Renamed the skill to investigate-fdc-tickets for consistent English activation.
+- Preserved the existing investigar-tickets-fdc identifier for invocation compatibility.
 - Preserved multilingual user prompts only in usage and evaluation examples.
 - Added an explicit internal-language validation rule.
 

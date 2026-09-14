@@ -1,5 +1,5 @@
 ---
-name: investigate-fdc-tickets
+name: investigar-tickets-fdc
 description: Investigates FDC tickets end to end using evidence available in files, Jira, code, SQL, Snowflake, Airflow, APIs, Web, and Mobile. Reconstructs the real data flow, separates facts from hypotheses, identifies the first demonstrable deviation, and delivers a diagnosis, validation plan, minimum fix, stabilization plan, and Jira-ready evidence. Use it for new or existing FDC tickets involving duplicates, synchronization, Downtime, Visits, routes, users, Historian, inbound/outbound integrations, or operational failures.
 ---
 

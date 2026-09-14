@@ -1,8 +1,8 @@
 version: 2
-skill: investigate-fdc-tickets
+skill: investigar-tickets-fdc
 cases:
   - id: context-first
-    prompt: "$investigate-fdc-tickets continúa FDCSD-428; el SQL y el post-run ya están adjuntos."
+    prompt: "$investigar-tickets-fdc continúa FDCSD-428; el SQL y el post-run ya están adjuntos."
     must:
       - read available evidence before asking
       - continue from confirmed findings
