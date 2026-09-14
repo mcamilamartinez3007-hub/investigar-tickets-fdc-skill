@@ -1,63 +1,59 @@
-# Metodología de investigación
+# Investigation methodology
 
-## 1. Encuadre
+## 1. Frame the case
 
-Registrar ticket, síntoma, ambiente, consumidor afectado, ventana temporal, impacto y expectativa funcional. Separar lo reportado por el usuario de lo observado directamente.
+Record the ticket, symptom, environment, affected consumer, time window, impact, and functional expectation. Separate what the reporter stated from what direct evidence shows.
 
-## 2. Recuperación
+## 2. Recover existing work
 
-Buscar primero materiales ya disponibles. Crear una tabla de evidencia con fuente, fecha, ambiente, observación, confianza y vigencia. No volver a ejecutar una prueba si el resultado anterior todavía responde la pregunta.
+Search available materials first. Build an evidence table with source, date, environment, observation, confidence, and validity. Do not rerun a test when an existing result still answers the question.
 
-## 3. Mapa mínimo
+## 3. Build the minimum map
 
-Representar cada frontera con:
-
-| Capa | Objeto/proceso | Grano | Identidad | Tiempo | Esperado | Observado |
+| Layer | Object or process | Grain | Identity | Time | Expected | Observed |
 |---|---|---|---|---|---|---|
 
-La primera fila donde esperado y observado divergen define dónde profundizar.
+The first row where expected and observed behavior diverge determines where to investigate next.
 
-## 4. Pruebas discriminantes
+## 4. Use discriminating tests
 
-Elegir la siguiente prueba según cuánto reduce incertidumbre. Ejemplos:
+Choose the next test by its uncertainty-reduction value. Examples:
 
-- ¿El nuevo UID existe antes de Accordia?
-- ¿La fila está en la vista dinámica pero no en el espejo?
-- ¿Cambió el grano entre origen y destino?
-- ¿El segundo run con el mismo input crea otra identidad?
-- ¿La diferencia aparece sólo después de Mobile sync?
+- Does the new UID exist before Accordia?
+- Is the row present in the dynamic view but absent from the static mirror?
+- Did the grain change between source and target?
+- Does a second run with the same input create another identity?
+- Does the difference appear only after Mobile synchronization?
 
-Cada prueba debe indicar qué rama sigue con YES y con NO.
+State what YES and NO mean before executing or requesting the test.
 
-## 5. Causalidad
+## 5. Prove causality
 
-Para declarar RCA, demostrar:
+Declare an RCA only when:
 
-1. El mecanismo existe en código/configuración activa.
-2. El mecanismo fue ejecutado en la ruta del caso.
-3. Su salida coincide con la desviación observada.
-4. No hay una explicación alternativa de igual o mayor fuerza.
-5. Una validación controlada puede demostrar que el fix elimina el síntoma.
+1. The mechanism exists in active code or configuration.
+2. The case traversed that mechanism.
+3. The mechanism output matches the observed deviation.
+4. No alternative explanation has equal or stronger support.
+5. A controlled validation can show that the fix removes the symptom.
 
-Si no, usar CURRENT BEST MECHANISM.
+Otherwise, use CURRENT BEST MECHANISM.
 
-## 6. Soluciones
+## 6. Separate solution types
 
-Separar:
+- Mitigation: temporarily reduces impact.
+- Recovery: restores operations or data.
+- Immediate fix: repairs the ticket mechanism.
+- Cleanup: classifies and repairs historical data.
+- Stabilization: eliminates the defect class.
+- Monitoring: detects recurrence or degradation.
 
-- Mitigation: reduce impacto inmediato.
-- Recovery: recupera operación o datos.
-- Immediate fix: corrige el mecanismo del ticket.
-- Cleanup: clasifica y repara historia.
-- Stabilization: elimina la clase de defectos.
-- Monitoring: detecta recurrencia o degradación.
+Do not confuse cleanup with prevention. Stop new corruption first.
 
-No mezclar cleanup con prevención. Primero detener nueva corrupción.
+## 7. Validate
 
-## 7. Validación
+Every validation must state baseline, action, expected result, actual result, and evidence. Include retry, replay, repeated input, zero/one/multiple candidates, partial failure, and downstream consumers when relevant.
 
-Toda validación debe declarar baseline, acción, resultado esperado, resultado real y evidencia. Incluir retry, replay, input repetido, 0/1/>1 candidatos, run parcial, run fallido y consumidores downstream cuando apliquen.
+## 8. Close technically
 
-## 8. Cierre
-
-Cerrar técnicamente cuando haya causa demostrada, alcance conocido, fix verificable, riesgos cubiertos y dueño del siguiente paso. El estado Jira puede diferir del estado técnico.
+Technical closure requires a demonstrated cause, known scope, verifiable fix, covered risks, and a named next-step owner. Jira status may differ from technical state.

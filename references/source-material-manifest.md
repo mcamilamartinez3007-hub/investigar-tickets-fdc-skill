@@ -1,39 +1,37 @@
-# Manifiesto de fuentes
+# Source material manifest
 
-## Estado del repositorio en 1.0.0
+## Repository state at version 1.0.1
 
-El repositorio se creó inicialmente sólo con README.md. Los archivos técnicos mencionados durante la investigación previa no estaban físicamente disponibles al construir este commit.
+The repository initially contained only README.md. Technical files discussed during earlier investigations were not physically available when the first skill version was built.
 
-Por ello:
+Therefore:
 
-- No se inventó ni reconstruyó su contenido.
-- Los hechos consolidados se documentaron como conocimiento derivado.
-- La trazabilidad a línea exacta debe revalidarse cuando se incorporen las fuentes originales.
-- source-material/ queda reservado para copias originales sin alterar.
+- Their content was not invented or reconstructed.
+- Consolidated findings were documented as derived knowledge.
+- Line-level traceability must be revalidated after original sources are added.
+- source-material/ is reserved for unchanged originals.
 
-## Fuentes mencionadas y no incorporadas
+## Mentioned but not yet incorporated sources
 
-Entre las fuentes conocidas aparecen:
+Known source categories include:
 
-- downtime-process-maps.html
-- fdc_downtime_mrg.json
-- Usp_Delete_OldDwntmRecords
-- Usp_Inactivate_OldDwntmRecords
-- modelos stg_pre_upsert de Downtime
-- modelos de DOWNTIME_MASTER y DOWNTIME_EXCEPTIONS
-- manifiestos y jobs de orquestación
-- handoffs históricos de FDCSD-428, 458 y 459
-- código AssetMetricsViewModel relacionado con versionado
+- downtime-process-maps.html;
+- fdc_downtime_mrg.json;
+- Usp_Delete_OldDwntmRecords;
+- Usp_Inactivate_OldDwntmRecords;
+- Downtime stg_pre_upsert models;
+- DOWNTIME_MASTER and DOWNTIME_EXCEPTIONS models;
+- orchestration manifests and jobs;
+- historical handoffs for FDCSD-428, FDCSD-458, and FDCSD-459;
+- AssetMetricsViewModel code related to versioning.
 
-Esta lista no afirma nombres exactos ni contenido completo fuera de lo ya consolidado.
+This list does not claim exact filenames or complete contents beyond the consolidated evidence.
 
-## Incorporación
+## Ingestion procedure
 
-Cuando se agreguen archivos:
-
-1. Guardarlos bajo source-material/<dominio>/ sin alterar.
-2. Añadir SHA o referencia de commit.
-3. Actualizar el inventario.
-4. Vincular hechos derivados.
-5. Revalidar known-cases.md.
-6. Ejecutar evals/evaluation-cases.yaml.
+1. Store files under source-material/<domain>/ without modification.
+2. Add a SHA or commit reference.
+3. Update this inventory.
+4. Link derived facts.
+5. Revalidate known-cases.md.
+6. Run evals/evaluation-cases.yaml.

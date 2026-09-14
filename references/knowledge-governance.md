@@ -1,8 +1,8 @@
-# Gobierno del conocimiento
+# Knowledge governance
 
-## Registro mínimo
+## Minimum record
 
-Cada conocimiento extraído debe registrar:
+Every extracted knowledge item must record:
 
 - source
 - ticket
@@ -16,34 +16,34 @@ Cada conocimiento extraído debe registrar:
 - related_tickets
 - requires_revalidation
 
-## Estados de vigencia
+## Validity states
 
-- current: confirmado y aplicable.
-- historical: válido para una versión o periodo anterior.
-- superseded: reemplazado por decisión o implementación posterior.
-- contradicted: existe evidencia directa incompatible.
-- unverified: proviene de memoria o narrativa sin corroboración.
-- environment-specific: aplica sólo al ambiente indicado.
+- current: confirmed and applicable.
+- historical: valid for an earlier version or period.
+- superseded: replaced by a later decision or implementation.
+- contradicted: incompatible with direct evidence.
+- unverified: recalled or narrated without corroboration.
+- environment-specific: applicable only to the stated environment.
 
-## Memoria frente a evidencia
+## Memory versus evidence
 
-La memoria y los chats ayudan a localizar conocimiento, pero Jira, datos, runtime y código activo lo corroboran. No presentar como fuente abierta un chat que no esté en el contexto o adjunto.
+Memory and conversations help locate knowledge. Jira, data, runtime, and active code corroborate it. Do not present a conversation as an accessible source when it is not in the current context or attached.
 
-## Ingesta futura
+## Future ingestion
 
-1. Incorporar fuente original sin modificar en source-material/.
-2. Clasificar secretos y PII; excluir lo innecesario.
-3. Extraer hechos con metadata.
-4. Relacionar tickets, objetos y dominios.
-5. Detectar contradicciones y supersession.
-6. Actualizar referencias derivadas.
-7. Ejecutar evaluaciones.
-8. Registrar cambio en CHANGELOG.
+1. Add the unchanged original source under source-material/.
+2. Remove secrets and unnecessary PII.
+3. Extract facts with metadata.
+4. Link tickets, objects, and domains.
+5. Detect contradictions and supersession.
+6. Update derived references.
+7. Run evaluations.
+8. Record the change in CHANGELOG.md.
 
-## Prohibiciones
+## Prohibitions
 
-- No copiar credenciales, tokens ni accesos.
-- No reemplazar silenciosamente una regla histórica.
-- No usar el cierre de Jira como prueba técnica.
-- No incorporar hipótesis como conocimiento current.
-- No convertir SKILL.md en un volcado documental.
+- Do not store credentials, tokens, or access codes.
+- Do not silently replace a historical rule.
+- Do not treat Jira closure as technical proof.
+- Do not promote a hypothesis to current knowledge.
+- Do not turn SKILL.md into a source dump.

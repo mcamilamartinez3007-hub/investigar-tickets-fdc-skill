@@ -1,38 +1,41 @@
-# Instrucciones para agentes
+# Agent instructions
 
-## Propósito del repositorio
+## Repository purpose
 
-Mantener una skill operativa para investigaciones FDC. El archivo SKILL.md contiene el contrato de ejecución; references/ contiene conocimiento modular; source-material/ conserva evidencia original.
+Maintain an operational skill for FDC investigations. SKILL.md defines runtime behavior, references/ contains modular knowledge, and source-material/ preserves original evidence.
 
-## Antes de cambiar conocimiento
+## Before changing knowledge
 
-1. Leer SKILL.md y la referencia del dominio.
-2. Confirmar si la fuente original ya existe.
-3. Separar evidencia, interpretación e hipótesis.
-4. Verificar fecha, ambiente, versión y vigencia.
-5. Detectar contradicciones y reglas reemplazadas.
-6. Excluir secretos y PII innecesaria.
+1. Read SKILL.md and the relevant domain reference.
+2. Confirm whether the original source already exists.
+3. Separate evidence, interpretation, and hypothesis.
+4. Verify date, environment, version, and validity.
+5. Detect contradictions and superseded rules.
+6. Remove secrets and unnecessary PII.
 
-## Reglas de edición
+## Editing rules
 
-- Mantener SKILL.md compacto y orientado a comportamiento.
-- No copiar fuentes extensas dentro de SKILL.md.
-- No reescribir archivos bajo source-material/.
-- Añadir conocimiento derivado a references/.
-- Actualizar source-material-manifest.md y CHANGELOG.md.
-- Añadir o ajustar una evaluación por cada guardrail nuevo.
-- No borrar historia válida; marcarla historical, superseded o contradicted.
-- No afirmar cobertura documental que no exista físicamente en el repositorio.
+- Keep SKILL.md compact and behavior-oriented.
+- Do not place large source dumps inside SKILL.md.
+- Do not rewrite files under source-material/.
+- Add derived knowledge to references/.
+- Update source-material-manifest.md and CHANGELOG.md.
+- Add or adjust an evaluation for every new guardrail.
+- Preserve valid history; mark it historical, superseded, or contradicted.
+- Never claim documentary coverage that is not physically present in the repository.
+- Keep all internal instructions, references, metadata, and templates in English.
+- User invocation examples may remain multilingual when they test language handling.
 
-## Validación mínima
+## Minimum validation
 
-- Frontmatter de SKILL.md con name y description.
-- Todas las rutas citadas por SKILL.md existen.
-- Las evaluaciones cubren el cambio.
-- No hay secretos, tokens ni datos personales innecesarios.
-- Los casos conocidos distinguen hechos de inferencias.
-- Los límites de solo lectura siguen vigentes.
+- SKILL.md has valid name and description frontmatter.
+- Every path referenced by SKILL.md exists.
+- Evaluations cover the change.
+- No secrets, tokens, or unnecessary personal data are present.
+- Known cases distinguish evidence from inference.
+- Read-only operating boundaries remain intact.
+- Internal content is in English.
 
-## Operación
+## Operations
 
-No usar este repositorio como autorización para escribir en Jira, ejecutar SQL, desplegar, promover o modificar infraestructura. Cada acción externa requiere una solicitud explícita separada del usuario.
+This repository does not authorize writing to Jira, executing SQL, deploying, promoting, or modifying infrastructure. Every external action requires a separate explicit request from the user.

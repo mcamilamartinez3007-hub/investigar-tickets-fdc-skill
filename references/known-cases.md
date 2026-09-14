@@ -1,57 +1,57 @@
-# Casos conocidos y guardrails
+# Known cases and guardrails
 
 ## FDCSD-428
 
-Estado actual confirmado:
+Currently confirmed:
 
-- DOWNTIME_MASTER se reconstruye desde Enertia.
-- FDCUpdateID nulo es intencional para registros originados en Enertia.
-- El staging intenta reutilizar identidad mediante MST.FDCUpdateID = DT.DOWNTIME_UID.
-- La construcción usa COALESCE(FDCUpdateID, DT.DOWNTIME_UID, UUID_STRING()).
-- Si FDCUpdateID es nulo y el join no resuelve una identidad previa, puede generarse un nuevo DOWNTIME_UID.
-- La alternativa de matching funcional se encontró comentada.
-- Los procedimientos Usp_Inactivate_OldDwntmRecords y Usp_Delete_OldDwntmRecords actúan sobre FDC_VISIT_METRIC para MTR052/MTR085/MTR051, no sobre FDC_DOWNTIME.
-- Después de esos procedimientos corre fdc_downtime_merge_reverse_etl.
-- Runtime observado: source FDC_STG_DOWNTIME_MERGE, target dbo.FDC_DOWNTIME, merge key DOWNTIME_UID, MATCHED UPDATE y NOT MATCHED INSERT; no se observó NOT MATCHED BY SOURCE para delete/inactivate.
-- Evidencia de una ejecución: 52,324 source rows, 0 updates, 52,324 inserts.
-- Población observada: 27,575 eventos lógicos, 55,150 filas físicas, 27,575 excedentes y grupos con UID_COUNT = 2.
+- DOWNTIME_MASTER is rebuilt from Enertia.
+- A null FDCUpdateID is intentional for records originating in Enertia.
+- Staging attempts to reuse identity through MST.FDCUpdateID = DT.DOWNTIME_UID.
+- Identity construction uses COALESCE(FDCUpdateID, DT.DOWNTIME_UID, UUID_STRING()).
+- When FDCUpdateID is null and the join cannot resolve a previous identity, a new DOWNTIME_UID may be generated.
+- The alternative functional matching logic was found commented out.
+- Usp_Inactivate_OldDwntmRecords and Usp_Delete_OldDwntmRecords operate on FDC_VISIT_METRIC for MTR052/MTR085/MTR051, not on FDC_DOWNTIME.
+- fdc_downtime_merge_reverse_etl runs after those procedures.
+- Observed runtime: source FDC_STG_DOWNTIME_MERGE, target dbo.FDC_DOWNTIME, merge key DOWNTIME_UID, MATCHED UPDATE, and NOT MATCHED INSERT. No NOT MATCHED BY SOURCE delete or inactivation behavior was observed.
+- One execution showed 52,324 source rows, zero updates, and 52,324 inserts.
+- The observed population contained 27,575 logical events, 55,150 physical rows, 27,575 excess rows, and UID_COUNT = 2 for the affected groups.
 
-Formulación correcta: FDCUpdateID nulo no es la causa raíz. El defecto es que el pipeline carece de resolución de identidad idempotente para ese escenario.
+Correct wording: null FDCUpdateID is not itself the root cause. The defect is the absence of idempotent identity resolution for that allowed scenario.
 
-No afirmar acumulación infinita A+B+C+D: la evidencia citada confirma exactamente dos identidades en esa población.
+Do not claim infinite A+B+C+D accumulation. The cited evidence proves exactly two identities in that population.
 
 ## FDCSD-459
 
-Mecanismo confirmado distinto:
+A distinct mechanism is confirmed:
 
-- En el golden sample de JT, un reason-only edit cambió el UID 6656592E... a 2885CA1E....
-- El nuevo UID apareció antes de CF/dbt/Accordia.
-- AssetMetricsViewModel contiene InvalidateAndCreateDowntimeRecord(), que invalida la versión previa, clona y usa Guid.NewGuid().
-- Métricas asociadas también pueden recibir nuevos GUID.
+- In JT's golden sample, a reason-only edit changed UID 6656592E... to 2885CA1E....
+- The new UID appeared before CF, dbt, or Accordia.
+- AssetMetricsViewModel contains InvalidateAndCreateDowntimeRecord(), which invalidates the previous version, clones it, and uses Guid.NewGuid().
+- Associated metrics may also receive new GUIDs.
 
-Lectura: 459 corresponde a identidad/versionado creado en FDC client/core.
+Interpretation: FDCSD-459 concerns identity and versioning created inside FDC client/core.
 
-Posible interacción no confirmada: App/Web UID A → UID B → round-trip Enertia → Data UID C. Probar end-to-end con el golden sample antes de declararla.
+Possible but unconfirmed interaction: App/Web UID A → UID B → Enertia round trip → Data UID C. Trace the golden sample end to end before declaring this chain.
 
 ## FDCSD-458
 
-Mantener separado:
+Keep it separate:
 
-- Alcance: LASTUPDATED, LAST_UPDATE y propagación temporal/versionado.
-- Existen diferencias sistémicas de representación temporal.
-- No está demostrado que causen el re-surfacing del external exception service.
+- Scope: LASTUPDATED, LAST_UPDATE, and timestamp/version propagation.
+- Systemic temporal representation differences exist.
+- The evidence does not prove that those differences cause re-surfacing in the external exception service.
 
-No concluir sin evidencia nueva:
+Do not conclude without new evidence:
 
-- 458 = 428;
-- 458 = 459;
-- diferencia temporal = retrigger;
-- timezone = causa.
+- FDCSD-458 equals FDCSD-428;
+- FDCSD-458 equals FDCSD-459;
+- timestamp difference causes retrigger;
+- timezone is the cause.
 
-## Historia: FDCSD-183 y Overhaul 2025
+## Historical relationship: FDCSD-183 and the 2025 Overhaul
 
-FDCSD-183 propuso identidad canónica, DOWNTIME_ID, reconciliación, prioridad Enertia, ledger outbound, exceptions y cambios de clientes/DTOs.
+FDCSD-183 proposed canonical identity, DOWNTIME_ID, reconciliation, Enertia priority, an outbound ledger, exceptions, and client/DTO changes.
 
-El Overhaul 2025 evolucionó a Enertia authoritative source, VW_DOWNTIME_ALL, rolling six months plus older opens, freshness gate, inactivate/delete de métricas, reload desde Enertia y orquestación separada.
+The 2025 Overhaul evolved toward authoritative Enertia state, VW_DOWNTIME_ALL, rolling six months plus older open records, a freshness gate, metric inactivation/deletion, reload from Enertia, and split orchestration.
 
-No tratar el overhaul como implementación literal de FDCSD-183. Persigue consistencia, pero reemplaza gran parte de la identidad canónica con authoritative refresh. El hallazgo de 2026 es que la intención de replacement no quedó completamente reflejada en FDC_DOWNTIME, donde persistió el upsert por UID.
+Do not treat the overhaul as a literal implementation of FDCSD-183. It pursues consistency but replaces much of the canonical-identity approach with an authoritative refresh model. The 2026 finding is that the intended replacement semantics were not fully reflected in FDC_DOWNTIME, where UID-based upsert behavior remained.

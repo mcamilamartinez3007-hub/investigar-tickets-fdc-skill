@@ -1,41 +1,44 @@
-# investigar-tickets-fdc-skill
+# investigate-fdc-tickets skill
 
-Skill reutilizable para investigar tickets FDC con evidencia trazable, reconstrucción de lineage y separación estricta entre hechos, hipótesis e incógnitas.
+Reusable skill for investigating FDC tickets through traceable evidence, lineage reconstruction, and strict separation of facts, hypotheses, and unknowns.
 
-## Qué resuelve
+## What it does
 
-- Continúa investigaciones existentes sin reiniciar desde cero.
-- Reconstruye recorridos entre FDC, App/Web/Mobile, APIs, SQL Server, Airflow, dbt, Snowflake, PostgreSQL/Timescale, Enertia e Historian.
-- Identifica la primera desviación demostrable.
-- Separa incident fix, recovery, cleanup y estabilización.
-- Produce evidencia técnica y comunicaciones en inglés listas para revisión humana.
+- Continues existing investigations without restarting.
+- Reconstructs flows across FDC App/Web/Mobile, APIs, SQL Server, Airflow, dbt, Snowflake, PostgreSQL/Timescale, Enertia, and Historian.
+- Finds the first demonstrable deviation.
+- Separates mitigation, recovery, immediate fixes, cleanup, and stabilization.
+- Produces technical evidence and client-ready English communication.
 
-## Uso
+## Usage
 
-Invocación recomendada:
+Recommended invocation:
 
-$investigar-tickets-fdc FDCSD-XYZ
+$investigate-fdc-tickets FDCSD-XYZ
 
-También puede activarse con solicitudes como:
+The skill should also activate for equivalent requests in English or Spanish, including:
 
+- Investigate this FDC ticket.
+- Continue the FDCSD-428 analysis.
 - Investiga este ticket FDC.
 - Continúa el análisis del 428.
-- Compara este resultado con el handoff anterior.
-- Ayúdame a preparar la validación UAT.
-- Determina si el problema pertenece a Data, App/API o al cliente.
+- Compare this result with the previous handoff.
+- Prepare the UAT validation.
+- Determine whether the defect belongs to Data, App/API, or the client.
 
-## Estructura
+## Structure
 
-- SKILL.md: comportamiento operativo y reglas de activación.
-- references/: conocimiento técnico, gobierno, ownership y casos conocidos.
-- assets/: plantillas de investigación y comunicación.
-- evals/: escenarios que verifican el comportamiento esperado.
-- source-material/: reservado para fuentes originales incorporadas sin alterar.
+- SKILL.md: runtime behavior and activation rules.
+- AGENTS.md: maintenance instructions for agents working on this repository.
+- references/: modular technical knowledge, governance, ownership, and known cases.
+- assets/: investigation and communication templates.
+- evals/: behavioral evaluation cases.
+- source-material/: immutable original evidence after safe ingestion.
 
-## Seguridad
+## Safety
 
-La skill analiza y recomienda. No escribe en Jira, no ejecuta SQL, no promueve cambios y no modifica sistemas salvo autorización explícita separada del usuario.
+The skill analyzes and recommends. It does not write to Jira, execute SQL, promote changes, or modify systems without a separate explicit user request.
 
-## Estado
+## Status
 
-Versión 1.0.0. La base inicial contiene conocimiento consolidado; los archivos técnicos originales deben añadirse a source-material/ para ampliar la trazabilidad documental sin reescribir la metodología.
+Version 1.0.1. The initial knowledge base contains consolidated findings. Original technical files should be added to source-material/ to improve line-level traceability without rewriting the methodology.

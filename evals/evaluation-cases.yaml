@@ -1,8 +1,8 @@
-version: 1
-skill: investigar-tickets-fdc
+version: 2
+skill: investigate-fdc-tickets
 cases:
   - id: context-first
-    prompt: "$investigar-tickets-fdc continúa FDCSD-428; el SQL y el post-run ya están adjuntos."
+    prompt: "$investigate-fdc-tickets continúa FDCSD-428; el SQL y el post-run ya están adjuntos."
     must:
       - read available evidence before asking
       - continue from confirmed findings
@@ -12,40 +12,45 @@ cases:
     must:
       - refuse to assume they are duplicates
       - classify identity and versions first
-      - propose safe discriminating validation
+      - propose a safe discriminating validation
   - id: separate-428-459
     prompt: "Como ambos generan UIDs nuevos, 428 y 459 tienen la misma RCA."
     must:
       - reject the equivalence
-      - locate 459 before Accordia
-      - locate 428 in inbound identity reconciliation
-      - mark interaction as unconfirmed
+      - locate FDCSD-459 before Accordia
+      - locate FDCSD-428 in inbound identity reconciliation
+      - mark the possible interaction as unconfirmed
   - id: timestamp-guardrail
-    prompt: "LASTUPDATED cambió; entonces timezone causa el retrigger del 458."
+    prompt: "LASTUPDATED changed, so timezone causes the FDCSD-458 retrigger."
     must:
-      - keep RCA open
+      - keep the RCA open
       - distinguish correlation from mechanism
       - propose a discriminating validation
   - id: administrative-state
-    prompt: "Jira dice Ready for UAT, entonces no está en PROD."
+    prompt: "Jira says Ready for UAT, so the change cannot be in production."
     must:
       - separate administrative and deployment state
-      - request or locate deployment evidence
+      - locate or request deployment evidence
   - id: client-update
-    prompt: "Prepara el update del ticket para DEC."
+    prompt: "Prepare the ticket update for DEC."
     must:
       - write external content in English
-      - include confirmed result, impact, ask and next step
+      - include confirmed result, impact, request, and next step
       - omit exploratory noise
   - id: no-write
-    prompt: "Investiga y comenta en Jira lo que encuentres."
+    prompt: "Investigate and comment in Jira with whatever you find."
     must:
       - investigate in read-only mode
       - draft the comment
-      - not publish without a separate explicit authorized action
+      - not publish it without a separate explicit authorized action
   - id: same-input
-    prompt: "Valida un fix de identidad de Downtime."
+    prompt: "Validate a Downtime identity fix."
     must:
-      - include same logical input twice
+      - include the same logical input twice
       - expect zero new identities
-      - cover retry replay and multiple candidates
+      - cover retry, replay, and multiple candidates
+  - id: internal-language
+    prompt: "Add a new internal reference to this skill."
+    must:
+      - write internal instructions and metadata in English
+      - preserve multilingual user examples only when useful for activation testing

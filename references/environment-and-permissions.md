@@ -1,43 +1,43 @@
-# Ambientes, permisos y escalamiento
+# Environments, permissions, and escalation
 
-Los permisos cambian con el tiempo. Nunca asumir que DEV, UAT o PROD comparten roles, objetos, credenciales o capacidad de ejecución.
+Permissions change over time. Never assume DEV, UAT, and production share roles, objects, credentials, or execution capabilities.
 
-## Registro por investigación
+## Per-investigation record
 
-| Campo | Valor |
+| Field | Value |
 |---|---|
-| Ambiente del síntoma | UNKNOWN |
-| Ambiente de reproducción | UNKNOWN |
-| Ambiente del código inspeccionado | UNKNOWN |
-| Rol de lectura | UNKNOWN |
-| Rol de desarrollo | UNKNOWN |
-| Quién ejecuta | UNKNOWN |
-| Quién promueve | UNKNOWN |
-| Quién valida | UNKNOWN |
-| Ventana autorizada | UNKNOWN |
-| Ruta de escalamiento | UNKNOWN |
+| Symptom environment | UNKNOWN |
+| Reproduction environment | UNKNOWN |
+| Inspected code environment | UNKNOWN |
+| Read role | UNKNOWN |
+| Development role | UNKNOWN |
+| Executor | UNKNOWN |
+| Promoter | UNKNOWN |
+| Validator | UNKNOWN |
+| Authorized window | UNKNOWN |
+| Escalation path | UNKNOWN |
 
-Completar sólo con evidencia vigente.
+Fill values only with current evidence.
 
 ## Guardrails
 
-- Verificar database, schema, warehouse, role y branch antes de interpretar resultados.
-- No extrapolar DEV a UAT o PROD sin comparar configuración y datos.
-- No entregar una acción de ejecución a alguien sin confirmar ownership.
-- No asumir que acceso de lectura implica permiso de modificación.
-- Separar quien desarrolla, ejecuta, promueve, valida y aprueba.
-- Tratar fallos de permisos como dependencia, no como invitación a evadir controles.
-- Para ventanas operacionales, registrar UTC y zona local con fecha para controlar DST.
+- Verify database, schema, warehouse, role, and branch before interpreting results.
+- Do not extrapolate DEV results to UAT or production without comparing configuration and data.
+- Do not assign an execution action without confirming ownership.
+- Do not assume read access includes modification permission.
+- Separate developer, executor, promoter, validator, and approver.
+- Treat permission failures as dependencies, not invitations to bypass controls.
+- Record UTC and local timezone with a date for operational windows so DST is explicit.
 
-## Escalamiento
+## Escalation criteria
 
-Escalar cuando:
+Escalate when:
 
-- se requiere una decisión funcional;
-- el objeto pertenece a otro equipo;
-- falta un tester o consumidor especializado;
-- el siguiente paso requiere permisos no disponibles;
-- existe riesgo de pérdida, cleanup masivo o impacto downstream;
-- la evidencia difiere entre ambientes.
+- a functional decision is required;
+- another team owns the object;
+- a specialized tester or consumer is unavailable;
+- the next action needs unavailable permissions;
+- data loss, mass cleanup, or downstream impact is possible;
+- evidence differs across environments.
 
-La solicitud de escalamiento debe incluir hallazgo confirmado, impacto, acción concreta requerida, owner por rol, ambiente y ventana.
+An escalation request must include the confirmed finding, impact, exact action required, owner by role, environment, and window.

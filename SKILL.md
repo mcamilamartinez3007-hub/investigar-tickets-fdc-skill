@@ -1,139 +1,139 @@
 ---
-name: investigar-tickets-fdc
-description: Investiga tickets FDC de extremo a extremo usando evidencia disponible en archivos, Jira, código, SQL, Snowflake, Airflow, APIs, Web y Mobile. Reconstruye el flujo real, separa hechos de hipótesis, identifica la primera desviación demostrable y entrega diagnóstico, validaciones, fix mínimo, estabilización y evidencia lista para Jira. Úsala al trabajar un ticket FDC nuevo o existente, continuar una investigación previa, analizar duplicados, sincronización, Downtime, Visits, rutas, usuarios, Historian, inbound/outbound o fallas operacionales.
+name: investigate-fdc-tickets
+description: Investigates FDC tickets end to end using evidence available in files, Jira, code, SQL, Snowflake, Airflow, APIs, Web, and Mobile. Reconstructs the real data flow, separates facts from hypotheses, identifies the first demonstrable deviation, and delivers a diagnosis, validation plan, minimum fix, stabilization plan, and Jira-ready evidence. Use it for new or existing FDC tickets involving duplicates, synchronization, Downtime, Visits, routes, users, Historian, inbound/outbound integrations, or operational failures.
 ---
 
-# Investigar tickets FDC
+# Investigate FDC tickets
 
-## Objetivo
+## Objective
 
-Continuar cada investigación desde el último punto comprobado y producir una respuesta técnica trazable, rápida y accionable para ingenieros junior o senior.
+Continue each investigation from the last confirmed point and produce a traceable, fast, and actionable technical response for junior or senior engineers.
 
-La secuencia rectora es:
+The governing sequence is:
 
-síntoma → flujo real → primera desviación demostrable → mecanismo técnico → causa → impacto → fix mínimo → estabilización si es sistémico
+symptom → actual flow → first demonstrable deviation → technical mechanism → cause → impact → minimum fix → stabilization when systemic
 
-No buscar solamente algo raro. No convertir correlación en causalidad.
+Do not merely search for something unusual. Do not turn correlation into causation.
 
-## Regla de contexto primero
+## Context-first rule
 
-Antes de investigar:
+Before investigating:
 
-1. Leer completamente los archivos relevantes del chat actual.
-2. Buscar handoffs, reportes, logs, código, resultados SQL y documentos previos disponibles.
-3. Recuperar investigaciones anteriores y conocimiento vigente del ticket.
-4. Consultar Jira cuando haga falta historia, requerimiento, decisión o evidencia externa al código.
-5. Pedir información o una nueva ejecución solamente cuando no exista evidencia suficiente o se requiera una medición nueva.
+1. Read every relevant file attached to the current conversation.
+2. Find available handoffs, reports, logs, pasted code, SQL results, and earlier documents.
+3. Recover earlier investigations and current knowledge about the ticket.
+4. Consult Jira when history, requirements, decisions, or evidence outside the code are needed.
+5. Request information or a new execution only when the evidence does not exist or a new measurement is necessary.
 
-No volver a pedir un archivo, query, captura o validación ya disponible. No reiniciar por cambio de chat.
+Never request a file, query, screenshot, or validation that is already available. Never restart solely because the conversation changed.
 
-## Límites de operación
+## Operating boundaries
 
-Esta skill es de análisis y recomendación.
+This skill analyzes and recommends.
 
-- Trabajar en modo lectura sobre Jira, repositorios, bases, logs y configuraciones.
-- No comentar, editar, cerrar ni transicionar tickets.
-- No ejecutar SQL ni comandos operacionales.
-- No promover cambios entre ambientes.
-- No modificar repositorios ni infraestructura salvo que el usuario lo pida de forma explícita en esa conversación.
-- No exponer credenciales, tokens, enlaces privados, PII innecesaria ni secretos.
-- Entregar queries y acciones para ejecución humana autorizada.
+- Use read-only access for Jira, repositories, databases, logs, and configurations.
+- Do not comment on, edit, close, or transition tickets.
+- Do not execute SQL or operational commands.
+- Do not promote changes between environments.
+- Do not modify repositories or infrastructure unless the user explicitly requests that action in the current conversation.
+- Do not expose credentials, tokens, private links, unnecessary PII, or secrets.
+- Provide queries and actions for authorized human execution.
 
-## Modelo de evidencia
+## Evidence model
 
-Etiquetar toda afirmación importante:
+Label every material statement:
 
-- CONFIRMED: evidencia directa.
-- HYPOTHESIS: explicación compatible aún no probada.
-- UNKNOWN: información no conocida.
-- NEXT VALIDATION: prueba con mayor capacidad de reducir incertidumbre.
+- CONFIRMED: supported by direct evidence.
+- HYPOTHESIS: compatible explanation that is not yet proven.
+- UNKNOWN: information that is not known.
+- NEXT VALIDATION: the test with the greatest uncertainty-reduction value.
 
-Prioridad ante contradicciones:
+When sources conflict, prioritize:
 
-1. Runtime real y logs.
-2. Datos reales.
-3. Código activo.
-4. Configuración activa.
-5. Jira y decisiones funcionales.
-6. Documentación de diseño.
-7. Comentarios históricos.
-8. Hipótesis.
+1. Actual runtime behavior and logs.
+2. Actual data.
+3. Active code.
+4. Active configuration.
+5. Jira and current business decisions.
+6. Design documentation.
+7. Historical comments.
+8. Hypotheses.
 
-El estado administrativo de Jira no demuestra implementación, validación, despliegue ni vigencia técnica.
+A Jira workflow status does not prove implementation, validation, deployment, or technical validity.
 
-## Inicio mínimo
+## Minimum starting questions
 
-Responder primero:
+Answer these first:
 
-- ¿Dónde aparece por primera vez el síntoma?
-- ¿Qué sistema lo creó?
-- ¿Qué identidad tenía allí?
-- ¿Qué esperaba recibir la siguiente capa?
-- ¿Qué recibió realmente?
+- Where does the symptom first appear?
+- Which system created it?
+- What identity did it have there?
+- What did the next layer expect?
+- What did it actually receive?
 
-Preferir pruebas discriminantes A/B frente a recorridos masivos. No inspeccionar decenas de tablas por si acaso.
+Prefer discriminating A/B tests over broad exploration. Do not inspect dozens of tables without a specific decision to make.
 
-## Selección de referencias
+## Reference routing
 
-Leer según el caso:
+Read only the references needed for the case:
 
-- Metodología general y cierre: references/methodology.md
-- Arquitectura, flujos y granularidad: references/architecture-and-lineage.md
-- Identidad y Downtime: references/downtime.md
-- Casos conocidos y guardrails: references/known-cases.md
-- Responsabilidades y dependencias: references/ownership-and-dependencies.md
-- Ambientes, permisos y escalamiento: references/environment-and-permissions.md
-- Fuentes autoritativas: references/source-of-truth-registry.md
-- Vigencia y actualización del conocimiento: references/knowledge-governance.md
-- Comunicación al cliente: references/client-collaboration.md
-- Fuentes técnicas disponibles o pendientes: references/source-material-manifest.md
-- Instrucciones consolidadas originales: references/conocimiento-fdc-completo.md
+- General method and closure: references/methodology.md
+- Architecture, flow, and grain: references/architecture-and-lineage.md
+- Identity and Downtime: references/downtime.md
+- Known cases and guardrails: references/known-cases.md
+- Ownership and dependencies: references/ownership-and-dependencies.md
+- Environments, permissions, and escalation: references/environment-and-permissions.md
+- Sources of truth: references/source-of-truth-registry.md
+- Knowledge validity and updates: references/knowledge-governance.md
+- Client communication: references/client-collaboration.md
+- Available or pending technical sources: references/source-material-manifest.md
+- Consolidated original requirements: references/fdc-consolidated-knowledge.md
 
-No cargar todas las referencias si el ticket no las necesita.
+Do not load every reference when the ticket does not require it.
 
-## Flujo de investigación
+## Investigation flow
 
-1. Definir síntoma, expectativa de negocio, ambiente y ventana temporal.
-2. Recuperar evidencia previa y establecer qué ya está confirmado.
-3. Dibujar el recorrido fuente → transformaciones → destinos → consumidor.
-4. Registrar identidad, grano, timestamps y estado por frontera.
-5. Encontrar la primera capa donde esperado y real divergen.
-6. Revisar el mecanismo activo que puede producir esa diferencia.
-7. Descartar hipótesis incompatibles con la evidencia.
-8. Declarar RCA sólo cuando mecanismo y caso observado formen una cadena demostrable.
-9. Proponer fix mínimo y, si aplica, plan de estabilización separado.
-10. Diseñar validaciones de regresión, retry, replay, ambigüedad y recuperación.
-11. Preparar evidencia interna en español y actualización externa en inglés.
+1. Define the symptom, business expectation, environment, and time window.
+2. Recover previous evidence and establish what is already confirmed.
+3. Map source → transformations → destinations → consumer.
+4. Record identity, grain, timestamps, and state at each boundary.
+5. Find the first layer where expected and actual behavior diverge.
+6. Inspect the active mechanism capable of producing that divergence.
+7. Discard hypotheses that conflict with evidence.
+8. Declare an RCA only when the mechanism and observed case form a demonstrable causal chain.
+9. Propose a minimum fix and a separate stabilization plan when applicable.
+10. Design regression, retry, replay, ambiguity, and recovery validations.
+11. Prepare internal engineering analysis and external client-facing content in English.
 
-## Duplicados e identidad
+## Duplicates and identity
 
-Nunca empezar con DISTINCT, ROW_NUMBER, DELETE o deduplicación.
+Never begin with DISTINCT, ROW_NUMBER, DELETE, or automatic deduplication.
 
-Determinar primero si las filas son:
+First determine whether the rows are:
 
-- el mismo evento;
-- versiones del mismo evento;
-- eventos legítimos diferentes;
-- representaciones de sistemas distintos;
-- corrupción o linaje ambiguo.
+- the same logical event;
+- versions of the same event;
+- legitimate separate events;
+- representations from different systems;
+- corrupt or ambiguous lineage.
 
-Una business key sirve para descubrir candidatos; no es automáticamente una identidad permanente.
+A business key may discover candidates. It is not automatically a permanent identity.
 
-## Criterio para cerrar la investigación
+## RCA closure criteria
 
-La RCA está cerrada únicamente si existe:
+An RCA is closed only when all of the following exist:
 
-- síntoma reproducido o evidencia equivalente;
-- primera desviación identificada;
-- mecanismo técnico activo;
-- cadena causal coherente con el caso;
-- hipótesis principales descartadas;
-- impacto delimitado;
-- validación capaz de confirmar el fix.
+- reproduced symptom or equivalent evidence;
+- identified first deviation;
+- active technical mechanism;
+- causal chain consistent with the observed case;
+- primary competing hypotheses discarded;
+- bounded impact;
+- validation capable of confirming the fix.
 
-Si falta alguno, entregar CURRENT BEST MECHANISM y declarar que la RCA sigue abierta.
+Otherwise, provide CURRENT BEST MECHANISM and state that the RCA remains open.
 
-## Formato obligatorio de salida
+## Required output structure
 
 - SYMPTOM
 - BUSINESS EXPECTATION
@@ -141,7 +141,7 @@ Si falta alguno, entregar CURRENT BEST MECHANISM y declarar que la RCA sigue abi
 - CONFIRMED FACTS
 - DISCARDED HYPOTHESES
 - OPEN QUESTIONS
-- ROOT CAUSE o CURRENT BEST MECHANISM
+- ROOT CAUSE or CURRENT BEST MECHANISM
 - IMPACT
 - FIX OPTIONS
 - RECOMMENDED FIX
@@ -150,12 +150,13 @@ Si falta alguno, entregar CURRENT BEST MECHANISM y declarar que la RCA sigue abi
 - EVIDENCE FOR JIRA
 - NEXT ACTION
 
-Usar assets/investigation-template.md. Para comunicaciones externas, usar assets/client-update-template.md.
+Use assets/investigation-template.md. Use assets/client-update-template.md for external communication.
 
-## Idioma y estilo
+## Language and style
 
-- Análisis interno y explicación al ingeniero: español claro.
-- Texto para Jira, cliente, handoff o UAT: inglés profesional y directo.
-- Mostrar hechos, inferencias y vacíos por separado.
-- Evitar narrativas largas cuando una conclusión accionable es suficiente.
-- No vestir una hipótesis con corbata y llamarla causa raíz.
+- Internal skill instructions, references, and generated technical artifacts: English.
+- User-facing explanation: follow the language used by the user unless they request otherwise.
+- Jira, client, handoff, and UAT content: professional, direct English.
+- Keep facts, inferences, and unknowns visibly separate.
+- Prefer an actionable conclusion over an unnecessarily long investigation diary.
+- Never dress a hypothesis in a tie and call it root cause.

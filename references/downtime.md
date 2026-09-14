@@ -1,91 +1,89 @@
-# Downtime: contratos y validación
+# Downtime contracts and validation
 
-## Separación obligatoria
+## Mandatory separation
 
-- IDENTITY: qué evento lógico es.
-- BUSINESS STATE: begin, end, reason, status.
-- VERSION: qué representación o versión técnica se observa.
-- AUDIT: creation, last update, load y sync.
+- IDENTITY: which logical event this is.
+- BUSINESS STATE: begin, end, reason, and status.
+- VERSION: which technical representation or version is being observed.
+- AUDIT: creation, last update, load, and synchronization metadata.
 
-La auditoría no debe crear por sí sola una identidad nueva ni representar un business change.
+Audit metadata must not independently create a new identity or represent a business change.
 
-## Arquitectura objetivo de referencia
+## Target architecture reference
 
-- DOWNTIME_ID: identidad canónica estable.
-- DOWNTIME_UID: identidad de representación, versión o fuente.
-- Begin/End/Reason/Status: estado funcional.
-- Creation/LastUpdated/Load/Sync: auditoría.
+- DOWNTIME_ID: stable canonical identity.
+- DOWNTIME_UID: representation-, version-, or source-specific identity.
+- Begin/End/Reason/Status: functional state.
+- Creation/LastUpdated/Load/Sync: audit metadata.
 
-## Investigación de duplicados
+## Duplicate investigation
 
-Capturar lineage mínimo:
+Capture at least:
 
-- evento lógico;
+- logical event;
 - source UID;
 - FDC UID;
 - Enertia HID/TID;
 - metric UIDs;
 - creation timestamp;
-- last update;
-- sistema fuente;
-- run o snapshot.
+- last-update timestamp;
+- source system;
+- run or snapshot.
 
-No usar ASSET_UID + BEGIN_DATETIME como identidad permanente sin demostrar unicidad y estabilidad. Begin puede cambiar y pueden existir eventos legítimos simultáneos.
+Do not use ASSET_UID + BEGIN_DATETIME as a permanent identity without proving uniqueness and stability. Begin may change, and multiple legitimate events may exist.
 
-## Fix idempotente
+## Idempotent fix requirements
 
-Antes de recomendar código, responder:
+Before recommending code, answer:
 
-- ¿Qué contrato está roto?
-- ¿Qué históricos existen?
-- ¿Qué casos legítimos podría colapsar?
-- ¿Funciona con retry y replay?
-- ¿Qué hace con 0, 1 o más candidatos?
-- ¿Qué hace con input obsoleto, corrección autoritativa o ejecución parcial?
+- Which contract is broken?
+- What historical data exists?
+- Which legitimate cases could the fix collapse?
+- Does it work under retry and replay?
+- What happens with zero, one, or multiple candidates?
+- What happens with stale input, authoritative correction, or a partial run?
 
-Criterio estrella:
+Primary criterion:
 
-mismo input lógico dos veces → cero identidades nuevas
+same logical input twice → zero new identities
 
-## Suite mínima
+## Minimum test suite
 
 - create;
 - reason edit;
 - begin edit;
-- end/close;
+- end or close;
 - reopen;
 - delete;
-- dos eventos el mismo día;
+- two events on the same day;
 - overlap;
 - open sentinel;
 - retry;
-- mismo input dos veces;
-- FDC pendiente aún no disponible en Enertia;
-- corrección autoritativa de Enertia;
-- fuente obsoleta;
-- run fallido;
-- run parcial;
-- múltiples candidatos;
-- orphan histórico;
-- cambio sólo de auditoría.
+- same input twice;
+- FDC pending and not yet present in Enertia;
+- authoritative Enertia correction;
+- stale source;
+- failed run;
+- partial run;
+- multiple candidates;
+- historical orphan;
+- audit-only timestamp change.
 
-## Cleanup histórico
+## Historical cleanup
 
-Orden:
+Required order:
 
-1. Detener nueva corrupción.
-2. Definir contrato canónico de identidad/versión.
-3. Construir lineage/crosswalk.
-4. Clasificar poblaciones históricas.
-5. Reapuntar dependencias.
-6. Inactivar representaciones excedentes.
-7. Validar consumidores.
-8. Borrar físicamente sólo si es requerido.
+1. Stop new corruption.
+2. Define the canonical identity and version contract.
+3. Build lineage and crosswalk.
+4. Classify historical populations.
+5. Repoint dependencies.
+6. Inactivate surplus representations.
+7. Validate consumers.
+8. Physically delete only when required.
 
-Categorías: duplicado técnico, evento legítimo, versión FDC, versión Enertia, linaje mixto, evento parcial y ambiguo. Nunca auto-deduplicar ambiguos.
+Categories: technical duplicate, legitimate event, FDC version, Enertia version, mixed lineage, partial event, and ambiguous. Never auto-deduplicate ambiguous records.
 
-## Estabilización
+## Stabilization target
 
-Objetivo consolidado:
-
-canonical DOWNTIME_ID + persistent source crosswalk + Enertia authoritative state + FDC outbound ledger + semantic version/change detection + idempotent inbound reconciliation + atomic snapshot publication + metrics as projection + ambiguity to exception + lineage-aware cleanup.
+Canonical DOWNTIME_ID + persistent source crosswalk + authoritative Enertia state + FDC outbound ledger + semantic change detection + idempotent inbound reconciliation + atomic snapshot publication + metrics as projection + ambiguity to exception + lineage-aware cleanup.

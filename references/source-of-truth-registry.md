@@ -1,30 +1,30 @@
-# Registro de fuentes de verdad
+# Source-of-truth registry
 
-Este registro es contextual, no universal.
+This registry is contextual, not universal.
 
-| Dominio/pregunta | Fuente prioritaria inicial | Confirmación requerida |
+| Domain or question | Initial priority source | Required confirmation |
 |---|---|---|
-| Comportamiento ocurrido | Runtime y logs | Run, ambiente y ventana |
-| Contenido real | Datos del ambiente afectado | Snapshot o query fechado |
-| Mecanismo implementado | Código/configuración activa | Rama, versión o deployment |
-| Expectativa funcional | Decisión vigente de negocio/Jira | Owner y fecha |
-| Downtime objetivo | Enertia cuando el contrato vigente lo define | Flujo y ventana específica |
-| Identidad creada en cliente | FDC App/Web/Mobile/Core | Caso antes del pipeline |
-| Publicación de Exceptions | Salida Accordia + Warehouse API | Contrato del endpoint/consumidor |
-| Historian | Pipeline y consumidor Historian | Aceptación del owner |
-| Estado de entrega | Evidencia de implementación/validación/deploy | No inferir del status Jira |
+| What actually happened | Runtime and logs | Run, environment, and window |
+| Actual data contents | Affected-environment data | Dated snapshot or query |
+| Implemented mechanism | Active code and configuration | Branch, version, or deployment |
+| Functional expectation | Current business decision or Jira evidence | Owner and date |
+| Downtime target state | Enertia when the active contract defines it | Specific flow and window |
+| Identity created in client | FDC App/Web/Mobile/Core | Case observed before the pipeline |
+| Exception publication | Accordia output and Warehouse API | Endpoint and consumer contract |
+| Historian behavior | Historian pipeline and consumer | Owner acceptance |
+| Delivery state | Implementation, validation, and deployment evidence | Never infer from Jira status |
 
-## Regla temporal
+## Temporal rule
 
-Cada afirmación debe tener ambiente, fecha y vigencia. Si una fuente histórica contradice runtime actual, conservar ambas y marcar la histórica como reemplazada o limitada, no borrarla.
+Every claim needs an environment, date, and validity state. When historical material conflicts with current runtime, preserve both and mark the historical statement as superseded or scope-limited.
 
-## Registro de estados
+## Separate states
 
-Separar:
+Track independently:
 
-- estado administrativo;
-- estado de implementación;
-- estado de validación;
-- estado de despliegue;
-- estado del conocimiento;
-- ticket donde continúa el trabajo.
+- administrative state;
+- implementation state;
+- validation state;
+- deployment state;
+- knowledge state;
+- ticket where work continues.

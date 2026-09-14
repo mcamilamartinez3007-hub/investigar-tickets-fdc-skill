@@ -1,37 +1,37 @@
-# Ownership y dependencias
+# Ownership and dependencies
 
-Los nombres de personas son temporales. Razonar por rol y verificar owners cuando afecten el siguiente paso.
+People change. Reason by role and revalidate named owners whenever ownership affects the next action.
 
-| Rol/capa | Responsabilidad típica | Entrega | Dependencias |
+| Role or layer | Typical responsibility | Deliverable | Dependencies |
 |---|---|---|---|
-| Equipo de datos | Lineage, SQL/dbt/Airflow, primera desviación, cambios DEV, validaciones y RCA | Evidencia, queries, fix y plan | Accesos, runtime, requerimiento y ventanas |
-| FDC App/Web/API/Core | Identidad del cliente, sync, cache, DTOs, endpoints y builds | Fix de aplicación/API y builds | Release, contrato API y testers |
-| DEC/negocio | Comportamiento esperado y realidad operacional | Decisión funcional, UAT y aceptación | Testers, permisos y ventanas |
-| Enertia | Estado autoritativo donde esté definido | Estado/correcciones operacionales | Extractos, vistas y publicación |
-| Accordia/Airflow/dbt | Orquestación, transformación y publicación | Runs, modelos, logs y salidas | Freshness, fuentes y destinos |
-| Snowflake/TSDB | Persistencia analítica e integración | Datos y contratos de salida | Grano, refresh y permisos |
-| Historian | Consumo operacional especializado | Validación downstream | Integración y aceptación |
-| Warehouse API | Exposición de salidas a interfaces | Respuesta de servicio | Tablas terminales y contrato |
-| Ingeniero | Ejecuta acciones autorizadas y comunica | Cambios y evidencias | Recomendaciones de la skill |
-| Skill | Analiza y recomienda | Diagnóstico y siguiente acción | Lectura de evidencia |
+| Data team | Lineage, SQL/dbt/Airflow, first deviation, DEV changes, validation, and RCA | Evidence, queries, fix, and plan | Access, runtime, requirements, and windows |
+| FDC App/Web/API/Core | Client identity, sync, cache, DTOs, endpoints, and builds | Application/API fix and builds | Release, API contract, and testers |
+| DEC or business | Expected behavior and operational reality | Functional decision, UAT, and acceptance | Testers, permissions, and windows |
+| Enertia | Authoritative state where defined | Operational state and corrections | Extracts, views, and publication |
+| Accordia/Airflow/dbt | Orchestration, transformation, and publication | Runs, models, logs, and outputs | Freshness, sources, and targets |
+| Snowflake/TSDB | Analytical and integration persistence | Data and output contracts | Grain, refresh, and permissions |
+| Historian | Specialized operational consumption | Downstream validation | Integration and owner acceptance |
+| Warehouse API | Output exposure to interfaces | Service response | Terminal tables and API contract |
+| Engineer | Performs authorized actions and communicates | Changes and evidence | Skill recommendations |
+| Skill | Analyzes and recommends | Diagnosis and next action | Read-only evidence |
 
-## Dependencias a verificar
+## Dependencies to verify
 
-- fuente disponible y fresca;
-- orden y horario de DAGs;
-- UTC, zona local y DST;
-- full refresh vs incremental;
-- grano origen/destino;
-- propiedad de objetos;
-- release App/Web/API;
-- usuarios/dispositivos de prueba;
-- ventana UAT/PROD;
-- aprobación funcional;
-- cleanup/backfill;
-- consumidores downstream;
-- monitoreo y recovery;
-- tickets absorbidos, relacionados o reemplazados.
+- source availability and freshness;
+- DAG order and schedules;
+- UTC, local timezone, and DST;
+- full refresh versus incremental behavior;
+- source and target grain;
+- object ownership;
+- App/Web/API release;
+- test users and devices;
+- UAT or production window;
+- functional approval;
+- cleanup or backfill;
+- downstream consumers;
+- monitoring and recovery;
+- related, absorbed, or superseded tickets.
 
-## RACI mínimo por cambio
+## Minimum RACI
 
-Registrar owner técnico, owner funcional, desarrollador, ejecutor, validador, aprobador, informados, ambiente, permisos, ventana y escalamiento. Si no se conoce, marcar UNKNOWN y pedir confirmación sólo si bloquea la siguiente acción.
+Record technical owner, functional owner, developer, executor, validator, approver, informed parties, environment, permissions, window, and escalation route. Mark missing information UNKNOWN and request it only when it blocks the next action.
