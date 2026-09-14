@@ -82,6 +82,7 @@ Leer según el caso:
 - Identidad y Downtime: references/downtime.md
 - Casos conocidos y guardrails: references/known-cases.md
 - Responsabilidades y dependencias: references/ownership-and-dependencies.md
+- Ambientes, permisos y escalamiento: references/environment-and-permissions.md
 - Fuentes autoritativas: references/source-of-truth-registry.md
 - Vigencia y actualización del conocimiento: references/knowledge-governance.md
 - Comunicación al cliente: references/client-collaboration.md
