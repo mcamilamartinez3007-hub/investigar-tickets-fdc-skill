@@ -9,7 +9,7 @@ This directory contains governed reusable knowledge produced by investigations.
 - operational/: verified playbooks with demonstrated effectiveness.
 - superseded/: retained historical knowledge replaced by a newer valid entry.
 
-Entries use the schema in schemas/knowledge-entry.schema.json and the template in assets/knowledge-entry-template.yaml.
+Entries use the schema in schemas/knowledge-entry.schema.json and the template in assets/knowledge-entry-template.json.
 
 ## Rules
 

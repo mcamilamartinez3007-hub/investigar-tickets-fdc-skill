@@ -44,7 +44,7 @@ Jira searches and engineer conversations may trigger extraction, but not automat
 
 ## Candidate construction
 
-Use assets/knowledge-entry-template.yaml and schemas/knowledge-entry.schema.json.
+Use assets/knowledge-entry-template.json and schemas/knowledge-entry.schema.json.
 
 A candidate must be atomic: one claim, one bounded scope, one primary knowledge type. Split combined claims when they can change independently.
 

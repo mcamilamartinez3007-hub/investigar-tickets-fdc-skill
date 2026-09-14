@@ -41,7 +41,7 @@ The skill analyzes and recommends. It does not write to Jira, execute SQL, promo
 
 ## Status
 
-Version 1.0.1. The initial knowledge base contains consolidated findings. Original technical files should be added to source-material/ to improve line-level traceability without rewriting the methodology.
+Version 1.1.0. The initial knowledge base contains consolidated findings. Original technical files should be added to source-material/ to improve line-level traceability without rewriting the methodology.
 
 ## Continuous learning
 

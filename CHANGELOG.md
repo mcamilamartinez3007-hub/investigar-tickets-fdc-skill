@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 - 2026-09-14
+## 1.1.0 - 2026-09-14
 
 - Added a continuous-learning lifecycle for knowledge discovered through Jira and engineer-led validation.
 - Added novelty, evidence, scope, conflict, safety, and operational-effectiveness gates.
